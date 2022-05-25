@@ -2,9 +2,12 @@
 pragma solidity >=0.7.5;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWTON.sol";
 
 contract swap {
+    using SafeERC20 for IERC20;
+
     address public wton;            //decimal = 27
     address public ton;             //decimal = 18
 
