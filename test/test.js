@@ -9,7 +9,7 @@ const {
     ICO20Contracts,
 } = require("../utils/ico_test_deploy_ethers.js");
 
-const { getAddresses, findSigner, setupContracts } = require("./utils");
+const { getAddresses, findSigner, setupContracts } = require("../utils/utils.js");
 let ico20Contracts;
 let defaultSender;
 

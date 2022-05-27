@@ -34,10 +34,5 @@ contract Swap {
         IWTON(wton).swapToTON(_amount);
         IERC20(ton).safeTransfer(msg.sender,_amount);   
     }
-
-    /*
-    first, just test the this functions -> account1, account2 before TONamount, WTONamount -> after TONamount, WTONAmount
-    next, you fixed decimal calcul -> exact execute!   
-    you deploy ton, wton that need
-    */
+    
 }
