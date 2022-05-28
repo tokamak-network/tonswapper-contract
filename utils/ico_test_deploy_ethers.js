@@ -345,7 +345,7 @@ class ICO20Contracts {
     let owner = await this.findSigner(owner1);
 
     // this = self;
-    console.log(' initializePlasmaEvmContracts owner:',owner );
+    // console.log(' initializePlasmaEvmContracts owner:',owner );
     //TON = await ethers.getContractFactory("TON");
     TON = await ethers.getContractFactory(
       TON1.abi,

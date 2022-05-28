@@ -12,6 +12,10 @@ const {
 const { getAddresses, findSigner, setupContracts } = require("../utils/utils.js");
 let ico20Contracts;
 let defaultSender;
+let tonSwapper;
+let wtonuniAmount;
+let account1;
+let account2;
 
 describe("swap", function () {
 
@@ -19,8 +23,8 @@ describe("swap", function () {
         const addresses = await getAddresses();
         ico20Contracts = new ICO20Contracts();
         defaultSender = addresses[0];
-        account1 = await findSigner(addresses[4]);
-        account2 = await findSigner(addresses[5]);
+        account1 = await findSigner(addresses[1]);
+        account2 = await findSigner(addresses[2]);
     }); 
     describe('TONSwapper', function () {
         it("1. ico20Contracts init ", async function () {
@@ -31,7 +35,7 @@ describe("swap", function () {
 
             ton = cons.ton;
             wton = cons.wton;
-            const wtonuniAmount = ethers.utils.parseUnits("10", 18);
+            wtonuniAmount = ethers.utils.parseUnits("10", 18);
 
             await ton.mint(account1.address, ethers.utils.parseUnits("1000", 18), {
                 from: defaultSender,
@@ -41,31 +45,35 @@ describe("swap", function () {
             });
             
             console.log("Account1 address", account1.address);
-            //console.log("Initial Balance of address in wTon", await wton.balanceOf(defaultSender));
-            //console.log("Initial Balance of address in Ton", await ton.balanceOf(defaultSender));
-            
-            console.log("Initial Balance of address in wTon", await wton.balanceOf(account1.address));
-            console.log("Initial Balance of address in Ton", await ton.balanceOf(account1.address));
-            
-            const tonSwapperFactory = await ethers.getContractFactory("Swap");
-            const tonSwapper = await tonSwapperFactory.deploy(wton.address, ton.address);
-            await tonSwapper.deployed();
+        });
 
+        it("deploy swap contarct", async () => {
+            const tonSwapperFactory = await ethers.getContractFactory("Swap");
+            tonSwapper = await tonSwapperFactory.deploy(wton.address, ton.address);
+            await tonSwapper.deployed();
+            console.log(tonSwapper.address);
+        })
+
+        it("swap test1 ton to WTON", async () => {
             await ton.approve(tonSwapper.address, wtonuniAmount);
-            await wton.approve(tonSwapper.address, ethers.utils.parseUnits("1000", 27));
             await ton.connect(account1).approve(tonSwapper.address, wtonuniAmount);
-            await wton.connect(account1).approve(tonSwapper.address, ethers.utils.parseUnits("1000", 27));
+            // await ton.connect(account1).approve(wton.address, wtonuniAmount);
+            
+            console.log("Initial Balance of address in Ton", Number(await ton.balanceOf(account1.address)));
+            console.log("Initial Balance of address in WTon", Number(await wton.balanceOf(account1.address)));
+            console.log("Initial Balance of tonSwapper in Ton", Number(await ton.balanceOf(tonSwapper.address)));
             
             await tonSwapper.connect(account1).tonToWton(wtonuniAmount);
+            // await wton.connect(account1).swapFromTON(wtonuniAmount);
 
-            //console.log("After Balance of address in wTon", await wton.balanceOf(defaultSender));
-            //console.log("After Balance of address in Ton", await ton.balanceOf(defaultSender));
+            console.log("After Balance of address in Ton", Number(await ton.balanceOf(account1.address)));
+            console.log("After Balance of address in WTon", Number(await wton.balanceOf(account1.address)));
+            console.log("After Balance of tonSwapper in Ton", Number(await ton.balanceOf(tonSwapper.address)));
+        })
 
-            console.log("After Balance of address in wTon", await wton.balanceOf(account1.address));
-            console.log("After Balance of address in Ton", await ton.balanceOf(account1.address));
+        it("swap test2 WTON to ton", async () => {
 
-            //expect(await wton.balanceOf(uniswapAccount.address)).to.be.equal(wtonuniAmount);
-        });
+        })
       });
 });
 /*
