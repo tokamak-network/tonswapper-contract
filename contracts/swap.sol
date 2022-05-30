@@ -41,8 +41,19 @@ contract Swap {
 
     // 2. wton to ton (this function execute before need the WTON approve -> this address)
     function wtonToTON(uint256 _amount) public {
+        uint256 allowance = IERC20(wton).allowance(address(this),ton);
+        if(allowance < _amount) {
+            needapproveWton();
+        }
         IERC20(wton).safeTransferFrom(msg.sender,address(this),_amount);
         IWTON(wton).swapToTON(_amount);
         IERC20(ton).safeTransfer(msg.sender,_amount);   
+    }
+
+    function needapproveWton() public {
+        IERC20(wton).approve(
+            ton,
+            type(uint256).max
+        );
     }
 }

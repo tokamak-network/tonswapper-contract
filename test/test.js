@@ -14,6 +14,7 @@ let ico20Contracts;
 let defaultSender;
 let tonSwapper;
 let wtonuniAmount;
+let tonuniAmount;
 let account1;
 let account2;
 
@@ -35,8 +36,8 @@ describe("swap", function () {
 
             ton = cons.ton;
             wton = cons.wton;
-            wtonuniAmount = ethers.utils.parseUnits("10", 18);
-
+            wtonuniAmount = ethers.utils.parseUnits("1", 27);
+            tonuniAmount = ethers.utils.parseUnits("10", 18);
             await ton.mint(account1.address, ethers.utils.parseUnits("1000", 18), {
                 from: defaultSender,
             });
@@ -47,32 +48,52 @@ describe("swap", function () {
             console.log("Account1 address", account1.address);
         });
 
-        it("deploy swap contarct", async () => {
+        it("deploy swap contract", async () => {
             const tonSwapperFactory = await ethers.getContractFactory("Swap");
             tonSwapper = await tonSwapperFactory.deploy(wton.address, ton.address);
             await tonSwapper.deployed();
             console.log(tonSwapper.address);
         })
-
-        it("swap test1 ton to WTON", async () => {
-            await ton.approve(tonSwapper.address, wtonuniAmount);
-            await ton.connect(account1).approve(tonSwapper.address, wtonuniAmount);
+        
+        it("swap test1 ton to Wton", async () => {
+            await ton.approve(tonSwapper.address, tonuniAmount);
+            await ton.connect(account1).approve(tonSwapper.address, tonuniAmount);
             // await ton.connect(account1).approve(wton.address, wtonuniAmount);
             
             console.log("Initial Balance of address in Ton", Number(await ton.balanceOf(account1.address)));
             console.log("Initial Balance of address in WTon", Number(await wton.balanceOf(account1.address)));
             console.log("Initial Balance of tonSwapper in Ton", Number(await ton.balanceOf(tonSwapper.address)));
+            console.log("Initial Balance of tonSwapper in WTon", Number(await wton.balanceOf(tonSwapper.address)));
             
-            await tonSwapper.connect(account1).tonToWton(wtonuniAmount);
+            await tonSwapper.connect(account1).tonToWton(tonuniAmount);
             // await wton.connect(account1).swapFromTON(wtonuniAmount);
 
             console.log("After Balance of address in Ton", Number(await ton.balanceOf(account1.address)));
             console.log("After Balance of address in WTon", Number(await wton.balanceOf(account1.address)));
             console.log("After Balance of tonSwapper in Ton", Number(await ton.balanceOf(tonSwapper.address)));
+            console.log("After Balance of tonSwapper in WTon", Number(await wton.balanceOf(tonSwapper.address)));
+            console.log("-----------------------------------\n\n");
         })
 
-        it("swap test2 WTON to ton", async () => {
+        
+        it("swap test2 Wton to ton", async () => {
+            await wton.approve(tonSwapper.address, wtonuniAmount);
+            await wton.connect(account1).approve(tonSwapper.address, wtonuniAmount);
 
+            console.log("Transfer Amount is                 ", Number(wtonuniAmount));
+            console.log("Initial Balance of address in Ton", Number(await ton.balanceOf(account1.address)));
+            console.log("Initial Balance of address in WTon", Number(await wton.balanceOf(account1.address)));
+            console.log("Initial Balance of tonSwapper in Ton", Number(await ton.balanceOf(tonSwapper.address)));
+            console.log("Initial Balance of tonSwapper in wTon", Number(await wton.balanceOf(tonSwapper.address)));
+            
+
+            await tonSwapper.connect(account1).wtonToTON(wtonuniAmount);
+
+            console.log("Initial Balance of address in Ton", Number(await ton.balanceOf(account1.address)));
+            console.log("Initial Balance of address in WTon", Number(await wton.balanceOf(account1.address)));
+            console.log("Initial Balance of tonSwapper in Ton", Number(await ton.balanceOf(tonSwapper.address)));
+            console.log("Initial Balance of tonSwapper in WTon", Number(await wton.balanceOf(tonSwapper.address)));
+            console.log("-----------------------------------\n\n");
         })
       });
 });
