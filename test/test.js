@@ -71,6 +71,7 @@ describe("swap", function () {
 
         it("swap test1 ton to Wton", async () => {
             await ton.approve(tonSwapper.address, tonuniAmount);
+            //await ton.approve(tonSwapper.address, tonuniAmount);
             await ton.connect(account1).approve(tonSwapper.address, tonuniAmount);
             // await ton.connect(account1).approve(wton.address, wtonuniAmount);
             

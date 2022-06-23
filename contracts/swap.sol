@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >= 0.7.6;
 pragma abicoder v2;
 
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import { OnApprove } from "./interfaces/OnApprove.sol";
+
 import "./interfaces/IWTON.sol";
 import "hardhat/console.sol";
 
@@ -22,6 +24,54 @@ contract Swap {
         wton = _wton;
         ton = _ton;
     }   
+
+    function onApprove(
+        address owner,
+        address spender,
+        uint256 tonAmount,
+        bytes calldata data
+    ) external returns (bool) {
+        
+        console.log(owner);
+        console.log(spender);
+        console.log(tonAmount);
+        console.log(data);
+
+        require(msg.sender == address(ton), 
+            "WTON: only accept TON approve callback");
+
+        
+        // swap owner's TON to WTON
+        
+        // tonToWton(tonAmount);
+        
+
+        // wtonToTON(tonAmount);
+        // uint256 wtonAmount = _toRAY(tonAmount);
+        // (address depositManager, address layer2) = _decodeTONApproveData(data);
+
+        // // approve WTON to DepositManager
+        // _approve(owner, depositManager, wtonAmount);
+
+        // // call DepositManager.onApprove to deposit WTON
+        // bytes memory depositManagerOnApproveData = _encodeDepositManagerOnApproveData(layer2);
+
+        // _callOnApprove(owner, depositManager, wtonAmount, depositManagerOnApproveData);
+
+        return true;
+    }
+    function approveAndCallTontoWton(address spender, uint256 amount, bytes memory data) public returns (bool) {
+        require(approve(spender, amount), "No sufficient Ton.");
+        OnApprove(msg.sender, spender, amount, data);
+        return true;
+    }
+
+    function approveAndCallWtontoTon(address spender, uint256 amount, bytes memory data) public returns (bool) {
+        require(approve(spender, amount), "No sufficient Wton.");
+        OnApprove(msg.sender, spender, amount, data);
+        return true;
+    }
+
     // 1. ton to wton (this function execute before need the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
         uint256 allowance = IERC20(ton).allowance(address(this),wton);
