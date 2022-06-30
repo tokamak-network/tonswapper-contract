@@ -2,16 +2,14 @@
 pragma solidity >= 0.7.6;
 pragma abicoder v2;
 
-
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import { OnApprove } from "./interfaces/OnApprove.sol";
-
 import "./interfaces/IWTON.sol";
 import "hardhat/console.sol";
 
-contract Swap {
+
+contract Swap is OnApprove{
     using SafeERC20 for IERC20;
 
     address public wton;            //decimal = 27 (RAY)
@@ -28,63 +26,45 @@ contract Swap {
     function onApprove(
         address owner,
         address spender,
-        uint256 tonAmount,
+        uint256 transferAmount,
         bytes calldata data
-    ) external returns (bool) {
-        
-        console.log(owner);
-        console.log(spender);
-        console.log(tonAmount);
-        console.log(data);
+    ) external override returns (bool) {
 
-        require(msg.sender == address(ton), 
-            "WTON: only accept TON approve callback");
-
+        console.log("Check Point#1");
+        console.log("Owner:", owner);
+        console.log("Spender:", spender);
+        console.log("Transfer Amount:", transferAmount);
+        console.log("Ton Address:", address(ton));
+        console.log("WTon Address:", address(wton));
+        console.log("Messg sender:", msg.sender);
         
+
+
         // swap owner's TON to WTON
-        
-        // tonToWton(tonAmount);
-        
-
-        // wtonToTON(tonAmount);
-        // uint256 wtonAmount = _toRAY(tonAmount);
-        // (address depositManager, address layer2) = _decodeTONApproveData(data);
-
-        // // approve WTON to DepositManager
-        // _approve(owner, depositManager, wtonAmount);
-
-        // // call DepositManager.onApprove to deposit WTON
-        // bytes memory depositManagerOnApproveData = _encodeDepositManagerOnApproveData(layer2);
-
-        // _callOnApprove(owner, depositManager, wtonAmount, depositManagerOnApproveData);
-
-        return true;
-    }
-    function approveAndCallTontoWton(address spender, uint256 amount, bytes memory data) public returns (bool) {
-        require(approve(spender, amount), "No sufficient Ton.");
-        OnApprove(msg.sender, spender, amount, data);
+        if (msg.sender == address(ton)) {
+            tonToWton(transferAmount);
+        } else if (msg.sender == address(wton)) {
+            wtonToTON(transferAmount);
+        }
         return true;
     }
 
-    function approveAndCallWtontoTon(address spender, uint256 amount, bytes memory data) public returns (bool) {
-        require(approve(spender, amount), "No sufficient Wton.");
-        OnApprove(msg.sender, spender, amount, data);
-        return true;
-    }
-
-    // 1. ton to wton (this function execute before need the TON approve -> this address)
+    // 1. ton to wton (this function need execute before  the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
-        uint256 allowance = IERC20(ton).allowance(address(this),wton);
+        // uint256 allowance = IERC20(ton).allowance(address(this),wton);
         uint256 wTonSwapAmount = _toRAY(_amount);
         console.log("tonAmount:%s",_amount);
         console.log("wTonAmount:%s",wTonSwapAmount);
         
-        if(allowance < _amount) {
-            needapprove();
-        }
-        IERC20(ton).safeTransferFrom(msg.sender,address(this),_amount);
+        // if(allowance < _amount) {
+        //     needapprove();
+        // }
+        // IERC20(ton).safeTransferFrom(msg.sender,address(this),_amount);
+        console.log("Ton Balance before :%s", IERC20(ton).balanceOf(msg.sender));
+        console.log("WTon Balance before :%s", IERC20(wton).balanceOf(msg.sender));
+        
         IWTON(wton).swapFromTON(_amount);
-        IERC20(wton).safeTransfer(msg.sender,wTonSwapAmount);   
+        //IERC20(wton).safeTransfer(msg.sender,wTonSwapAmount);   
     }
 
     // 2. wton to ton (this function execute before need the WTON approve -> this address)

@@ -26,6 +26,8 @@
   },
   "dependencies": {
     "@makerdao/currency": "^0.9.10",
-    "@openzeppelin/contracts": "^4.6.0"
+    "@openzeppelin/contracts": "^4.6.0",
+    "@uniswap/v3-core": "^1.0.1",
+    "@uniswap/v3-periphery": "^1.4.1"
   }
 }
