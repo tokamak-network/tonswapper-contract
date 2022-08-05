@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >= 0.7.6;
-pragma abicoder v2;
+pragma solidity ^0.8.0;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -24,61 +23,99 @@ contract Swap is OnApprove{
     }   
 
     function onApprove(
-        address owner,
+        address sender,
         address spender,
         uint256 transferAmount,
         bytes calldata data
     ) external override returns (bool) {
 
         console.log("Check Point#1");
-        console.log("Owner:", owner);
-        console.log("Spender:", spender);
-        console.log("Transfer Amount:", transferAmount);
-        console.log("Ton Address:", address(ton));
-        console.log("WTon Address:", address(wton));
-        console.log("Messg sender:", msg.sender);
-        
-
-
+  
         // swap owner's TON to WTON
         if (msg.sender == address(ton)) {
-            tonToWton(transferAmount);
+            console.log("Check Point#2");
+            _tonToWTON(sender,transferAmount);
         } else if (msg.sender == address(wton)) {
-            wtonToTON(transferAmount);
+            console.log("Check Point#3");
+            _wtonToTON(sender,transferAmount);
         }
         return true;
     }
 
+    function _tonToWTON(address _sender, uint256 _amount) internal {
+        uint256 allowance = IERC20(ton).allowance(address(this),wton);
+        uint256 wTonSwapAmount = _toRAY(_amount);
+        if(allowance < _amount) {
+            console.log("start the ton contract approveAndCall");
+            needapprove();
+        }
+        console.log("Check Point#4");
+        IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
+        IWTON(wton).swapFromTON(_amount);
+        IERC20(wton).safeTransfer(_sender,wTonSwapAmount);   
+    }
+
+    function _wtonToTON(address _sender, uint256 _amount) internal {
+        // _amount is wton uint
+        uint256 allowance = IERC20(wton).allowance(address(this),ton);
+        uint256 tonSwapAmount = _toWAD(_amount);
+        console.log("approveAndCall msg.sender : %s", msg.sender);
+        console.log("approveAndCall address(this) : %s", address(this));
+        console.log("approveAndCall wton address : %s", wton);
+        if(allowance < _amount) {
+            console.log("start the wton contract approveAndCall");
+            needapproveWton();
+        }
+        console.log("Check Point#4");
+        IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
+        console.log("approveAndCall WTon Balance before : %s", IERC20(wton).balanceOf(address(this)));
+        // IWTON(wton).swapToTONAndTransfer(_sender,_amount);
+
+        IWTON(wton).swapToTON(_amount);
+        console.log("Check Point#5");
+        IERC20(ton).safeTransfer(_sender,tonSwapAmount);   
+    }
+
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
-        // uint256 allowance = IERC20(ton).allowance(address(this),wton);
+        uint256 allowance = IERC20(ton).allowance(address(this),wton);
         uint256 wTonSwapAmount = _toRAY(_amount);
-        console.log("tonAmount:%s",_amount);
-        console.log("wTonAmount:%s",wTonSwapAmount);
+        // console.log("tonAmount:%s",_amount);
+        // console.log("wTonAmount:%s",wTonSwapAmount);
         
-        // if(allowance < _amount) {
-        //     needapprove();
-        // }
-        // IERC20(ton).safeTransferFrom(msg.sender,address(this),_amount);
-        console.log("Ton Balance before :%s", IERC20(ton).balanceOf(msg.sender));
-        console.log("WTon Balance before :%s", IERC20(wton).balanceOf(msg.sender));
+        if(allowance < _amount) {
+            console.log("start the ton contract approve");
+            needapprove();
+        }
+
+        IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
+        // console.log("Ton Balance before :%s", IERC20(ton).balanceOf(address(this)));
+        // console.log("WTon Balance before :%s", IERC20(wton).balanceOf(address(this)));
         
         IWTON(wton).swapFromTON(_amount);
-        //IERC20(wton).safeTransfer(msg.sender,wTonSwapAmount);   
+
+        // console.log("Ton2 Balance before :%s", IERC20(ton).balanceOf(address(this)));
+        // console.log("WTon2 Balance before :%s", IERC20(wton).balanceOf(address(this)));
+        IERC20(wton).safeTransfer(msg.sender,wTonSwapAmount);   
     }
 
     // 2. wton to ton (this function execute before need the WTON approve -> this address)
     function wtonToTON(uint256 _amount) public {
         uint256 allowance = IERC20(wton).allowance(address(this),ton);
         uint256 tonSwapAmount = _toWAD(_amount);
-        
+
+        console.log("msg.sender : %s", msg.sender);
+        console.log("address(this) : %s", address(this));
+
         if(allowance < _amount) {
+            console.log("start the wton contract approve");
             needapproveWton();
         }
 
         IERC20(wton).safeTransferFrom(msg.sender,address(this),_amount);
-        IWTON(wton).swapToTON(_amount);
-        IERC20(ton).safeTransfer(msg.sender,tonSwapAmount);   
+        IWTON(wton).swapToTONAndTransfer(msg.sender,_amount);
+        // IWTON(wton).swapToTON(_amount);
+        // IERC20(ton).safeTransfer(msg.sender,tonSwapAmount);   
     }
 
     function needapprove() public {

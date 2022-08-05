@@ -125,7 +125,7 @@ const HASH_PHASE1_DEV_Mining = keccak256("PHASE1_DEV_Mining");
 
 class ICO20Contracts {
   constructor() {
-    console.log("ICO20Contract Contructor enter");
+    // console.log("ICO20Contract Contructor enter");
     this.ton = null;
     this.wton = null;
 
@@ -134,7 +134,7 @@ class ICO20Contracts {
       WTON: null,
     };
 
-    console.log("ICO20Contract Contructor exit");
+    // console.log("ICO20Contract Contructor exit");
   }
 
 

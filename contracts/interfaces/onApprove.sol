@@ -1,8 +1,9 @@
-pragma solidity >= 0.7.6;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-import { ERC165 } from "@openzeppelin/contracts/utils/ERC165.sol";
+import { ERC165Storage } from "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
-abstract contract OnApprove is ERC165 {
+abstract contract OnApprove is ERC165Storage {
   constructor() {
     _registerInterface(OnApprove(this).onApprove.selector);
   }
