@@ -50,8 +50,8 @@ let npm;
 let swapRouter;
 let nonfungibleTokenPD;
 
-const tokenPooluniAmount = ethers.utils.parseUnits("1000000", 18);
-const wtonPooluniAmount = ethers.utils.parseUnits("1000000", 27);
+const tokenPooluniAmount = ethers.utils.parseUnits("100000", 18);
+const wtonPooluniAmount = ethers.utils.parseUnits("100000", 27);
 
 describe("swap", function () {
 
@@ -148,6 +148,7 @@ describe("swap", function () {
 
         it("mint the WTON-TOS Pool", async () => {
             let beforeliquidity = await wtonTokenPool.liquidity();
+            console.log("beforeliquidity : ",Number(beforeliquidity));
             expect(beforeliquidity).to.be.equal(0);
 
             // console.log(deployedUniswapV3.nftPositionManager);
@@ -156,7 +157,7 @@ describe("swap", function () {
             await mintPosition2(erc20TokenContract.address,wton.address,tokenPooluniAmount,wtonPooluniAmount,deployedUniswapV3.nftPositionManager,poolcreator);
 
             let afterliquidity = await wtonTokenPool.liquidity();
-            // console.log("liquidity : ",Number(liquidity));
+            console.log("afterliquidity : ",Number(afterliquidity));
             expect(afterliquidity).to.be.gt(0);
         })
     })
@@ -175,85 +176,23 @@ describe("swap", function () {
     })
 
     describe("# 4. test the TON -> Tokne swap", async () => {
-        
+        it("# 4-1-1. don't tonToToken before approve", async () => {
+            let tx = tonSwapper.connect(account1).tonToToken(tonuniAmount,erc20TokenContract.address);
+
+            await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
+        })
+
+        it("# 4-1-2. tonToTOken after approve", async () => {
+            let beforeAmount = await erc20TokenContract.balanceOf(account1.address);
+            // console.log("beforeAmount :",beforeAmount);
+            expect(beforeAmount).to.be.equal(0);
+
+            await ton.connect(account1).approve(tonSwapper.address,tonuniAmount);
+            await tonSwapper.connect(account1).tonToToken(tonuniAmount,erc20TokenContract.address);
+
+            let afterAmount = await erc20TokenContract.balanceOf(account1.address);
+            // console.log("afterAmount :",afterAmount);
+            expect(afterAmount).to.be.above(0);
+        })
     })
-
-    // describe("# 2. test the swap function", async function () {
-    //     it("# 2-1-1. don't tonToWton before approve", async () => {
-    //         let tx = tonSwapper.connect(account1).tonToWton(tonuniAmount);
-
-    //         await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
-    //     })
-
-    //     it("# 2-1-2. swap ton to Wton after approve", async () => {    
-    //         let tonbalance1 = await ton.balanceOf(account1.address);
-    //         let wtonbalance1 = await wton.balanceOf(account1.address);
-    //         console.log("tonBalance1 : ", Number(tonbalance1));
-    //         expect(Number(wtonbalance1)).to.be.equal(0);
-
-    //         await ton.connect(account1).approve(tonSwapper.address,tonuniAmount);
-    //         await tonSwapper.connect(account1).tonToWton(tonuniAmount);
-
-    //         let tonbalance2 = await ton.balanceOf(account1.address);
-    //         let wtonbalance2 = await wton.balanceOf(account1.address);
-    //         console.log("tonBalance1 : ", Number(tonbalance2));
-    //         console.log("wtonbalance2 : ", Number(wtonbalance2));
-    //         expect(Number(wtonbalance2)).to.be.equal(Number(wtonuniAmount));
-    //     })
-
-    //     it("# 2-2-1. don't wtonToTON before approve", async () => {
-    //         let tx = tonSwapper.connect(account1).wtonToTON(wtonuniAmount);
-
-    //         await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
-    //     })
-
-    //     it("# 2-2-2. swap wton to ton after approve", async () => {
-    //         let tonbalance1 = await ton.balanceOf(account1.address);
-    //         let wtonbalance1 = await wton.balanceOf(account1.address);
-    //         console.log("wtonBalance1 : ", Number(wtonbalance1));
-    //         expect(Number(tonbalance1)).to.be.equal(0);
-
-    //         await wton.connect(account1).approve(tonSwapper.address,wtonuniAmount);
-    //         await tonSwapper.connect(account1).wtonToTON(wtonuniAmount);
-
-    //         let tonbalance2 = await ton.balanceOf(account1.address);
-    //         let wtonbalance2 = await wton.balanceOf(account1.address);
-    //         console.log("tonBalance1 : ", Number(tonbalance2));
-    //         console.log("wtonbalance2 : ", Number(wtonbalance2));
-    //         expect(Number(tonbalance2)).to.be.equal(Number(tonuniAmount));
-    //     })
-    // });
-
-
-    // describe("# 3. test the approveAndCall", async function () {
-    //     it("# 3-1-1. swap ton to wton", async () => {
-    //         let tonbalance1 = await ton.balanceOf(account1.address);
-    //         let wtonbalance1 = await wton.balanceOf(account1.address);
-    //         console.log("wtonBalance1 : ", Number(wtonbalance1));
-    //         expect(Number(wtonbalance1)).to.be.equal(0);
-    //         let data = 0x01;
-    //         await ton.connect(account1).approveAndCall(tonSwapper.address,tonuniAmount,data);
-
-    //         let tonbalance2 = await ton.balanceOf(account1.address);
-    //         let wtonbalance2 = await wton.balanceOf(account1.address);
-    //         console.log("tonBalance1 : ", Number(tonbalance2));
-    //         console.log("wtonbalance2 : ", Number(wtonbalance2));
-    //         expect(Number(wtonbalance2)).to.be.equal(Number(wtonuniAmount));
-    //     })
-
-    //     it("# 3-1-2. swap wton to ton", async () => {
-    //         let tonbalance1 = await ton.balanceOf(account1.address);
-    //         let wtonbalance1 = await wton.balanceOf(account1.address);
-    //         console.log("wtonBalance1 : ", Number(wtonbalance1));
-    //         expect(Number(tonbalance1)).to.be.equal(0);
-    //         let data = 0x01;
-    //         await wton.connect(account1).approveAndCall(tonSwapper.address,wtonuniAmount,data);
-
-    //         let tonbalance2 = await ton.balanceOf(account1.address);
-    //         let wtonbalance2 = await wton.balanceOf(account1.address);
-    //         console.log("tonBalance1 : ", tonbalance2);
-    //         console.log("wtonbalance2 : ", wtonbalance2);
-    //         expect(Number(tonbalance2)).to.be.equal(Number(tonuniAmount));
-    //     })
-    // });
 });
