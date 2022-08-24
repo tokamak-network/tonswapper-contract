@@ -142,10 +142,6 @@ contract Swap is OnApprove{
         (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
         require(sqrtPriceX96 > 0, "pool is not initialized");
 
-        // uint24 fee = 3000;
-        // int24 tickSpacings = 60;
-        // int24 acceptTickChangeInterval = 8; +=5% 까지만 허용
-        // minimumTickInterval = 18; 가격이 떨어져도 +-10프로, 수수료가 있어서 2틱정도 더내림
         int24 timeWeightedAverageTick = OracleLibrary.consult(address(pool), 120);
 
         require(
@@ -156,7 +152,8 @@ contract Swap is OnApprove{
 
         (uint256 amountOutMinimum, , uint160 sqrtPriceLimitX96)
             = limitPrameters(_amount, address(pool), wton, _address, 18);
-        
+        console.log("amountOutMinimum : %s", amountOutMinimum);
+
 
         uint256 wtonAmount = IERC20(wton).balanceOf(address(this));
         IERC20(wton).approve(address(uniswapRouter),wtonAmount);
@@ -172,13 +169,14 @@ contract Swap is OnApprove{
                 amountOutMinimum: amountOutMinimum,
                 sqrtPriceLimitX96: sqrtPriceLimitX96
             });
-            
+
         // wton -> token 변경
         uint256 amountOut = ISwapRouter(uniswapRouter).exactInputSingle(params);
         IERC20(_address).safeTransfer(msg.sender, amountOut);
     }
 
     // 4. token -> TON
+
 
     function needapprove() public {
         IERC20(ton).approve(
