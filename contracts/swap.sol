@@ -176,6 +176,63 @@ contract Swap is OnApprove{
     }
 
     // 4. token -> TON
+    // 유저는 컨트랙트에 approve
+    // 컨트랙트는 token을 uniswapRouter에 approve 해주어야함
+    function tokenToTON(
+        uint256 _amount,
+        address _address
+    )
+        public
+    {
+        IERC20(_address).safeTransferFrom(msg.sender,address(this), _amount);
+
+        IIUniswapV3Pool pool = IIUniswapV3Pool(getPoolAddress(_address));
+        console.log("address(pool) : %s", address(pool));
+        address token0 = pool.token0();
+        console.log("token0 : %s", token0);
+        address token1 = pool.token1();
+        console.log("token1 : %s", token1);
+
+        require(address(pool) != address(0), "pool didn't exist");
+
+        (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
+        require(sqrtPriceX96 > 0, "pool is not initialized");
+
+        int24 timeWeightedAverageTick = OracleLibrary.consult(address(pool), 120);
+
+        require(
+            acceptMinTick(timeWeightedAverageTick, 60, 8) <= tick
+            && tick < acceptMaxTick(timeWeightedAverageTick, 60, 8),
+            "It's not allowed changed tick range."
+        );
+
+        (uint256 amountOutMinimum, , uint160 sqrtPriceLimitX96)
+            = limitPrameters(_amount, address(pool), token0, token1, 18);
+        console.log("amountOutMinimum : %s", amountOutMinimum);
+
+        // uint256 newAmount = IERC20(_address).balanceOf(address(this));
+        // console.log("newAmount : %s", newAmount);
+
+        IERC20(_address).approve(address(uniswapRouter),_amount);
+
+        ISwapRouter.ExactInputSingleParams memory params =
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: _address,
+                tokenOut: wton,
+                fee: 3000,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: _amount,
+                amountOutMinimum: amountOutMinimum,
+                sqrtPriceLimitX96: sqrtPriceLimitX96
+            });
+
+        // token -> wton 변경
+        uint256 amountOut = ISwapRouter(uniswapRouter).exactInputSingle(params);
+        
+        // wton -> ton 으로 변경과 동시에 transfer함
+        IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
+    }
 
 
     function needapprove() public {
