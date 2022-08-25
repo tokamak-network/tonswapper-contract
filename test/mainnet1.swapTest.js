@@ -66,6 +66,7 @@ const tokenPooluniAmount = ethers.utils.parseUnits("100000", 18);
 const wtonPooluniAmount = ethers.utils.parseUnits("100000", 27);
 
 const oneETH = ethers.utils.parseUnits("1", 18);
+const oneWTON = ethers.utils.parseUnits("1", 27);
 
 let uniswapInfo={
     poolfactory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
@@ -154,25 +155,70 @@ describe("swap", function () {
         })
     })
 
-    describe("#3. test the token -> TON swap", async () => {
-        it("#3-1. don't tokenToTON before approve", async () => {
-            let tx = tonSwapper.connect(admin).tokenToTON(tonuniAmount,tos.address);
-
-            await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds balance")
+    describe("#quoter test", async () => {
+        it("quoter test", async () => {
+            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
+            let tx = await tonSwapper.connect(admin).quoterTest(weth.address);
+            await tx.wait();
         })
 
-        it("#3-2. tokenToTON after approve", async () => {
-            let beforeAmount = await ton.balanceOf(admin.address);
-            expect(beforeAmount).to.be.equal(0);
+        it("quoter test2", async () => {
+            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
+            let tx = await tonSwapper.connect(admin).quoterTest2(weth.address);
+            await tx.wait();
+        })
 
-            await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            await tonSwapper.connect(admin).tokenToTON(oneETH,weth.address);
-           
-            let afterAmount = await ton.balanceOf(admin.address);
-            console.log("afterAmount :", Number(afterAmount));
-            expect(afterAmount).to.be.above(0);
+        it("quoter test3 callstatic", async () => {
+            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
+            let tx = await tonSwapper.callStatic.quoterTest(weth.address);
+            console.log("tx : ", tx);
+        })
+
+        it("quoter test4 callstatic", async () => {
+            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
+            let tx = await tonSwapper.callStatic.quoterTest2(weth.address);
+            console.log("tx : ", tx);
         })
     })
+
+    // describe("#tokenAB test", async () => {
+    //     it("tokenAB test", async () => {
+    //         await tonSwapper.connect(admin).tokenABtest(
+    //             wton.address,
+    //             tos.address,
+    //             oneWTON
+    //         )
+    //     })
+
+    //     it("tokenBA test", async () => {
+    //         await tonSwapper.connect(admin).tokenABtest(
+    //             tos.address,
+    //             wton.address,
+    //             oneETH
+    //         )
+    //     })
+
+    // })
+
+    // describe("#3. test the token -> TON swap", async () => {
+    //     it("#3-1. don't tokenToTON before approve", async () => {
+    //         let tx = tonSwapper.connect(admin).tokenToTON(tonuniAmount,tos.address);
+
+    //         await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds balance")
+    //     })
+
+    //     it("#3-2. tokenToTON after approve", async () => {
+    //         let beforeAmount = await ton.balanceOf(admin.address);
+    //         expect(beforeAmount).to.be.equal(0);
+
+    //         await weth.connect(admin).approve(tonSwapper.address, oneETH);
+    //         await tonSwapper.connect(admin).tokenToTON(oneETH,weth.address);
+           
+    //         let afterAmount = await ton.balanceOf(admin.address);
+    //         console.log("afterAmount :", Number(afterAmount));
+    //         expect(afterAmount).to.be.above(0);
+    //     })
+    // })
 
     // describe("#4. test the TON -> Tokne swap", async () => {
     //     it("# 4-1-1. don't tonToToken before approve", async () => {

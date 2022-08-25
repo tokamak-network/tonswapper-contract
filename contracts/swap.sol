@@ -14,6 +14,9 @@ import "./libraries/OracleLibrary.sol";
 import "./interfaces/IWTON.sol";
 import "hardhat/console.sol";
 
+import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
+
+
 interface IIUniswapV3Factory {
     function getPool(address,address,uint24) external view returns (address);
 }
@@ -46,6 +49,9 @@ contract Swap is OnApprove{
 
     ISwapRouter public uniswapRouter;
 
+    IQuoter v3Quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);     //mainnet
+
+
     constructor(
         address _wton,
         address _ton,
@@ -76,6 +82,40 @@ contract Swap is OnApprove{
         return true;
     }
 
+    function quoterTest(
+        address _token
+    )
+        public 
+        returns (uint256)
+    {
+        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+            _token,
+            wton,
+            3000,
+            1e20,
+            0
+        );
+        console.log("amountOut1 : %s", amountOut1);
+        return amountOut1;
+    }
+
+    function quoterTest2(
+        address _token
+    ) 
+        public 
+        returns (uint256)
+    {
+        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
+            wton,
+            _token,
+            3000,
+            1e27,
+            0
+        );
+        console.log("amountOut2 : %s", amountOut2);
+        return amountOut2;
+    }
+
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
         uint256 allowance = IERC20(ton).allowance(address(this),wton);
@@ -85,7 +125,7 @@ contract Swap is OnApprove{
         
         if(allowance < _amount) {
             console.log("start the ton contract approve");
-            needapprove();
+            needapprove(_amount);
         }
 
         IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
@@ -119,6 +159,8 @@ contract Swap is OnApprove{
     }
 
     // 3. ton to token
+    // _amount : tonAmount
+    // _address : getTokenAddress
     function tonToToken(
         uint256 _amount,
         address _address
@@ -129,7 +171,7 @@ contract Swap is OnApprove{
         // uint256 wTonSwapAmount = _toRAY(_amount);
 
         if(allowance < _amount) {
-            needapprove();
+            needapprove(_amount);
         }
 
         IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
@@ -178,6 +220,8 @@ contract Swap is OnApprove{
     // 4. token -> TON
     // 유저는 컨트랙트에 approve
     // 컨트랙트는 token을 uniswapRouter에 approve 해주어야함
+    // _amount : tokenAmount
+    // _address : tokenAddress
     function tokenToTON(
         uint256 _amount,
         address _address
@@ -234,12 +278,50 @@ contract Swap is OnApprove{
         IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
     }
 
+    // 5. TON -> ProjectToken (multiSwap)
+    // WTON -> TOKEN -> TOKEN의 멀티 스왑
+    function tonToTokenMulti(
+        uint256 _amount
+    )
+        public 
+    {
+        ISwapRouter.ExactInputParams memory params =
+            ISwapRouter.ExactInputParams({
+                path: abi.encodePacked(DAI, poolFee, USDC, poolFee, WETH9),
+                recipient: msg.sender,
+                deadline: block.timestamp,
+                amountIn: amountIn,
+                amountOutMinimum: 0
+            });
+    }
 
-    function needapprove() public {
-        IERC20(ton).approve(
-            wton,
-            type(uint256).max
-        );
+    function tokenABtest(
+        address _tokenA,
+        address _tokenB,
+        uint256 _amount
+    ) 
+        public 
+    {
+
+        IIUniswapV3Pool pool = IIUniswapV3Pool(getPoolAddress2(_tokenA,_tokenB));
+
+        (uint256 amountOutMinimum, , uint160 sqrtPriceLimitX96)
+            = limitPrameters(_amount, address(pool), _tokenA, _tokenB, 18);
+        console.log("amountOutMinimum : %s", amountOutMinimum);
+    }
+
+
+    function needapprove(
+        uint256 _amount
+    ) 
+        public 
+    {
+        if(IERC20(ton).allowance(address(this),wton) < _amount) {
+            IERC20(ton).approve(
+                wton,
+                type(uint256).max
+            );
+        }
     }
 
     function needapproveWton() public {
@@ -251,12 +333,8 @@ contract Swap is OnApprove{
 
     /* internal function */
     function _tonToWTON(address _sender, uint256 _amount) internal {
-        uint256 allowance = IERC20(ton).allowance(address(this),wton);
+        needapprove(_amount);
         uint256 wTonSwapAmount = _toRAY(_amount);
-        if(allowance < _amount) {
-            console.log("start the ton contract approveAndCall");
-            needapprove();
-        }
         console.log("Check Point#4");
         IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
         IWTON(wton).swapFromTON(_amount);
@@ -303,6 +381,14 @@ contract Swap is OnApprove{
     ) public view returns(address) {
         address factory = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
         return IIUniswapV3Factory(factory).getPool(wton, _token, 3000);
+    }
+
+    function getPoolAddress2(
+        address _tokenA,
+        address _tokenB
+    ) public view returns(address) {
+        address factory = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
+        return IIUniswapV3Factory(factory).getPool(_tokenA, _tokenB, 3000);
     }
 
 
