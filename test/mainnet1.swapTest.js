@@ -142,7 +142,7 @@ describe("swap", function () {
             // console.log(tonSwapper.address);
         })
 
-        it("#2-2. ETH deposit WETH", async () => {
+        it("#2-2. ETH deposit and get WETH ", async () => {
             let beforeAmount = await weth.balanceOf(admin.address);
             // console.log("beforeAmount :",beforeAmount);
             expect(beforeAmount).to.be.equal(0);
@@ -155,7 +155,7 @@ describe("swap", function () {
         })
     })
 
-    describe("#quoter test", async () => {
+    describe("#3. quoter test", async () => {
         it("quoter test", async () => {
             // await weth.connect(admin).approve(tonSwapper.address, oneETH);
             let tx = await tonSwapper.connect(admin).quoterTest(weth.address);
@@ -179,6 +179,11 @@ describe("swap", function () {
             let tx = await tonSwapper.callStatic.quoterTest2(weth.address);
             console.log("tx : ", tx);
         })
+
+        it("multiQuoter test1 callstatic(wton -> eth -> tos)", async () => {
+            let tx = await tonSwapper.callStatic.multiQuoter(wton.address,weth.address,tos.address,oneWTON);
+            console.log("tosAmount : ", Number(tx));
+        })
     })
 
     // describe("#tokenAB test", async () => {
@@ -200,44 +205,66 @@ describe("swap", function () {
 
     // })
 
-    // describe("#3. test the token -> TON swap", async () => {
-    //     it("#3-1. don't tokenToTON before approve", async () => {
-    //         let tx = tonSwapper.connect(admin).tokenToTON(tonuniAmount,tos.address);
+    describe("#4. test the token -> TON swap", async () => {
+        it("#4-1. don't tokenToTON before approve", async () => {
+            let tx = tonSwapper.connect(admin).tokenToTON(tonuniAmount,tos.address);
 
-    //         await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds balance")
-    //     })
+            await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds balance")
+        })
 
-    //     it("#3-2. tokenToTON after approve", async () => {
-    //         let beforeAmount = await ton.balanceOf(admin.address);
-    //         expect(beforeAmount).to.be.equal(0);
+        it("#4-2. tokenToTON after approve (WETH -> TON swap)", async () => {
+            let beforeAmount = await ton.balanceOf(admin.address);
+            if(beforeAmount == 0){
+                expect(beforeAmount).to.be.equal(0);
+            }
 
-    //         await weth.connect(admin).approve(tonSwapper.address, oneETH);
-    //         await tonSwapper.connect(admin).tokenToTON(oneETH,weth.address);
+            await weth.connect(admin).approve(tonSwapper.address, oneETH);
+            await tonSwapper.connect(admin).tokenToTON(oneETH,weth.address);
            
-    //         let afterAmount = await ton.balanceOf(admin.address);
-    //         console.log("afterAmount :", Number(afterAmount));
-    //         expect(afterAmount).to.be.above(0);
-    //     })
-    // })
+            let afterAmount = await ton.balanceOf(admin.address);
+            console.log("afterAmount :", Number(afterAmount));
+            expect(afterAmount).to.be.above(0);
+        })
+    })
 
-    // describe("#4. test the TON -> Tokne swap", async () => {
-    //     it("# 4-1-1. don't tonToToken before approve", async () => {
-    //         let tx = tonSwapper.connect(account1).tonToToken(tonuniAmount,weth.address);
+    describe("#5. test the TON -> Token(TOS) swap", async () => {
+        it("#5-1-1. don't tonToToken before approve", async () => {
+            let tx = tonSwapper.connect(admin).tonToToken(tonuniAmount,weth.address);
 
-    //         await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds balance")
-    //     })
+            await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
+        })
 
-    //     it("# 4-1-2. tonToTOken after approve", async () => {
-    //         let beforeAmount = await tos.balanceOf(account1.address);
-    //         console.log("beforeAmount :",beforeAmount);
-    //         expect(beforeAmount).to.be.equal(0);
+        it("#5-1-2. tonToTOken after approve (TON -> TOS swap)", async () => {
+            let beforeAmount = await tos.balanceOf(admin.address);
+            console.log("beforeAmount :",beforeAmount);
+            expect(beforeAmount).to.be.equal(0);
 
-    //         await ton.connect(account1).approve(tonSwapper.address,tonuniAmount);
-    //         await tonSwapper.connect(account1).tonToToken(tonuniAmount,tos.address);
+            await ton.connect(admin).approve(tonSwapper.address,tonuniAmount);
+            await tonSwapper.connect(admin).tonToToken(tonuniAmount,tos.address);
 
-    //         let afterAmount = await tos.balanceOf(account1.address);
-    //         console.log("afterAmount :",afterAmount);
-    //         expect(afterAmount).to.be.above(0);
-    //     })
-    // })
+            let afterAmount = await tos.balanceOf(admin.address);
+            console.log("afterAmount :",afterAmount);
+            expect(afterAmount).to.be.above(0);
+        })
+    })
+
+    describe("#6. ton -> wton && wton -> ton test", async () => {
+        it("#6-1. ton -> wton test", async () => {
+            let beforeWTONamount = await wton.balanceOf(admin.address);
+            await ton.connect(admin).approve(tonSwapper.address,oneETH);
+            await tonSwapper.connect(admin).tonToWton(oneETH);
+            let afterWTONamount = await wton.balanceOf(admin.address);
+            let result = Number(afterWTONamount)-Number(beforeWTONamount);
+            expect(Number(result)).to.be.equal(Number(oneWTON));
+        })
+
+        it("#6-2. wton -> ton test", async () => {
+            let beforeTONamount = await ton.balanceOf(admin.address);
+            await wton.connect(admin).approve(tonSwapper.address,oneWTON);
+            await tonSwapper.connect(admin).wtonToTON(oneWTON);
+            let afterTONamount = await ton.balanceOf(admin.address);
+            let result = Number(afterTONamount)-Number(beforeTONamount);
+            expect(Number(result)).to.be.equal(Number(oneETH));
+        })
+    })
 });

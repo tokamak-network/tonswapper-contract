@@ -92,7 +92,7 @@ contract Swap is OnApprove{
             _token,
             wton,
             3000,
-            1e20,
+            1e18,
             0
         );
         console.log("amountOut1 : %s", amountOut1);
@@ -116,46 +116,45 @@ contract Swap is OnApprove{
         return amountOut2;
     }
 
+    function multiQuoter(
+        address _firstToken,
+        address _secondToken,
+        address _thirdToken,
+        uint256 inputAmount
+    )
+        public
+        returns (uint256)
+    {
+        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+            _firstToken,
+            _secondToken,
+            3000,
+            inputAmount,
+            0
+        );
+        console.log("amountOut1 : %s", amountOut1);
+
+        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
+            _secondToken,
+            _thirdToken,
+            3000,
+            amountOut1,
+            0
+        );
+        console.log("amountOut2 : %s", amountOut2);
+        return amountOut2;
+    }
+
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
-        uint256 allowance = IERC20(ton).allowance(address(this),wton);
-        uint256 wTonSwapAmount = _toRAY(_amount);
-        // console.log("tonAmount:%s",_amount);
-        // console.log("wTonAmount:%s",wTonSwapAmount);
-        
-        if(allowance < _amount) {
-            console.log("start the ton contract approve");
-            needapprove(_amount);
-        }
-
-        IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
-        // console.log("Ton Balance before :%s", IERC20(ton).balanceOf(address(this)));
-        // console.log("WTon Balance before :%s", IERC20(wton).balanceOf(address(this)));
-        
-        IWTON(wton).swapFromTON(_amount);
-
-        // console.log("Ton2 Balance before :%s", IERC20(ton).balanceOf(address(this)));
-        // console.log("WTon2 Balance before :%s", IERC20(wton).balanceOf(address(this)));
-        IERC20(wton).safeTransfer(msg.sender,wTonSwapAmount);   
+        _tonToWTON(msg.sender,_amount);  
     }
 
     // 2. wton to ton (this function execute before need the WTON approve -> this address)
     function wtonToTON(uint256 _amount) public {
-        uint256 allowance = IERC20(wton).allowance(address(this),ton);
-        uint256 tonSwapAmount = _toWAD(_amount);
-
-        console.log("msg.sender : %s", msg.sender);
-        console.log("address(this) : %s", address(this));
-
-        if(allowance < _amount) {
-            console.log("start the wton contract approve");
-            needapproveWton();
-        }
-
-        IERC20(wton).safeTransferFrom(msg.sender,address(this),_amount);
-        IWTON(wton).swapToTONAndTransfer(msg.sender,_amount);
-        // IWTON(wton).swapToTON(_amount);
-        // IERC20(ton).safeTransfer(msg.sender,tonSwapAmount);   
+        _wtonToTON(msg.sender,_amount);
+        // IERC20(wton).safeTransferFrom(msg.sender,address(this),_amount);
+        // IWTON(wton).swapToTONAndTransfer(msg.sender,_amount);
     }
 
     // 3. ton to token
@@ -278,22 +277,25 @@ contract Swap is OnApprove{
         IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
     }
 
-    // 5. TON -> ProjectToken (multiSwap)
+    // 5. TON -> ProjectToken (multiSwap) LYDA -> AURA
     // WTON -> TOKEN -> TOKEN의 멀티 스왑
-    function tonToTokenMulti(
-        uint256 _amount
-    )
-        public 
-    {
-        ISwapRouter.ExactInputParams memory params =
-            ISwapRouter.ExactInputParams({
-                path: abi.encodePacked(DAI, poolFee, USDC, poolFee, WETH9),
-                recipient: msg.sender,
-                deadline: block.timestamp,
-                amountIn: amountIn,
-                amountOutMinimum: 0
-            });
-    }
+    // poolFee를 따로 받던가 3000 고정이던가
+
+    // function tonToTokenMulti(
+    //     uint256 _amount
+    // )
+    //     public 
+    // {   
+
+    //     ISwapRouter.ExactInputParams memory params =
+    //         ISwapRouter.ExactInputParams({
+    //             path: abi.encodePacked(DAI, poolFee, USDC, poolFee, WETH9),
+    //             recipient: msg.sender,
+    //             deadline: block.timestamp,
+    //             amountIn: amountIn,
+    //             amountOutMinimum: 0
+    //         });
+    // }
 
     function tokenABtest(
         address _tokenA,
@@ -324,6 +326,7 @@ contract Swap is OnApprove{
         }
     }
 
+    //필요없는듯?
     function needapproveWton() public {
         IERC20(wton).approve(
             ton,
@@ -345,22 +348,14 @@ contract Swap is OnApprove{
     //먼저 ton을 wton으로 변경해놔야 추후 ton으로 변경가능함
     function _wtonToTON(address _sender, uint256 _amount) internal {
         // _amount is wton uint
-        uint256 allowance = IERC20(wton).allowance(address(this),ton);
         uint256 tonSwapAmount = _toWAD(_amount);
-        console.log("approveAndCall msg.sender : %s", msg.sender);
-        console.log("approveAndCall address(this) : %s", address(this));
-        console.log("approveAndCall wton address : %s", wton);
-        if(allowance < _amount) {
-            console.log("start the wton contract approveAndCall");
-            needapproveWton();
-        }
-        console.log("Check Point#4");
+        // console.log("approveAndCall msg.sender : %s", msg.sender);
+        // console.log("approveAndCall address(this) : %s", address(this));
+        // console.log("approveAndCall wton address : %s", wton);
         IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
-        console.log("approveAndCall WTon Balance before : %s", IERC20(wton).balanceOf(address(this)));
+        // console.log("approveAndCall WTon Balance before : %s", IERC20(wton).balanceOf(address(this)));
         // IWTON(wton).swapToTONAndTransfer(_sender,_amount);
-
         IWTON(wton).swapToTON(_amount);
-        console.log("Check Point#5");
         IERC20(ton).safeTransfer(_sender,tonSwapAmount);   
     }
 
