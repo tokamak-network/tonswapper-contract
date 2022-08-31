@@ -46,6 +46,9 @@ contract Swap is OnApprove{
 
     address public wton;            //decimal = 27 (RAY)
     address public ton;             //decimal = 18 (WAD)
+    address public tos;             //decimal = 18 (WAD)
+
+    uint24 public constant poolFee = 3000;
 
     ISwapRouter public uniswapRouter;
 
@@ -55,10 +58,12 @@ contract Swap is OnApprove{
     constructor(
         address _wton,
         address _ton,
+        address _tos,
         address _uniswapRouter
     ) {
         wton = _wton;
         ton = _ton;
+        tos = _tos;
         uniswapRouter = ISwapRouter(_uniswapRouter);
     }   
 
@@ -116,7 +121,7 @@ contract Swap is OnApprove{
         return amountOut2;
     }
 
-    function multiQuoter(
+    function multiQuoterInputWTONAmount(
         address _firstToken,
         address _secondToken,
         address _thirdToken,
@@ -145,6 +150,37 @@ contract Swap is OnApprove{
         return amountOut2;
     }
 
+    function multiQuoterInputTONAmount(
+        address _firstToken,
+        address _secondToken,
+        address _thirdToken,
+        uint256 inputAmount
+    )
+        public
+        returns (uint256)
+    {   
+        uint256 wTonSwapAmount = _toRAY(inputAmount);
+
+        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+            _firstToken,
+            _secondToken,
+            3000,
+            wTonSwapAmount,
+            0
+        );
+        console.log("amountOut1 : %s", amountOut1);
+
+        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
+            _secondToken,
+            _thirdToken,
+            3000,
+            amountOut1,
+            0
+        );
+        console.log("amountOut2 : %s", amountOut2);
+        return amountOut2;
+    }
+
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
         _tonToWTON(msg.sender,_amount);  
@@ -157,7 +193,7 @@ contract Swap is OnApprove{
         // IWTON(wton).swapToTONAndTransfer(msg.sender,_amount);
     }
 
-    // 3. ton to token
+    // 3. ton to token (TON -> WTON -> TOS)
     // _amount : tonAmount
     // _address : getTokenAddress
     function tonToToken(
@@ -167,12 +203,10 @@ contract Swap is OnApprove{
         public 
     {
         uint256 allowance = IERC20(ton).allowance(address(this),wton);
-        // uint256 wTonSwapAmount = _toRAY(_amount);
-
+        uint256 wTonSwapAmount = _toRAY(_amount);
         if(allowance < _amount) {
             needapprove(_amount);
         }
-
         IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
         //ton -> wton으로 변경
         IWTON(wton).swapFromTON(_amount);
@@ -195,9 +229,8 @@ contract Swap is OnApprove{
             = limitPrameters(_amount, address(pool), wton, _address, 18);
         console.log("amountOutMinimum : %s", amountOutMinimum);
 
-
-        uint256 wtonAmount = IERC20(wton).balanceOf(address(this));
-        IERC20(wton).approve(address(uniswapRouter),wtonAmount);
+        // uint256 wtonAmount = IERC20(wton).balanceOf(address(this));
+        IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
         
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
@@ -206,7 +239,7 @@ contract Swap is OnApprove{
                 fee: 3000,
                 recipient: address(this),
                 deadline: block.timestamp,
-                amountIn: wtonAmount,
+                amountIn: wTonSwapAmount,
                 amountOutMinimum: amountOutMinimum,
                 sqrtPriceLimitX96: sqrtPriceLimitX96
             });
@@ -216,7 +249,7 @@ contract Swap is OnApprove{
         IERC20(_address).safeTransfer(msg.sender, amountOut);
     }
 
-    // 4. token -> TON
+    // 4. token -> TON (TOS -> WTON -> TON)
     // 유저는 컨트랙트에 approve
     // 컨트랙트는 token을 uniswapRouter에 approve 해주어야함
     // _amount : tokenAmount
@@ -277,25 +310,51 @@ contract Swap is OnApprove{
         IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
     }
 
-    // 5. TON -> ProjectToken (multiSwap) LYDA -> AURA
-    // WTON -> TOKEN -> TOKEN의 멀티 스왑
+    // 5. TON -> ProjectToken (multiSwap) (TON->WTON->TOS->LYDA)
+    // WTON -> TOKEN -> TOKEN의 멀티 스왑 (TON->WTON->TOS->LYDA)
     // poolFee를 따로 받던가 3000 고정이던가
+    // _projectToken = 최종적으로 받을 token 주소
+    // _amount = 넣을 TON양
+    // _minimumAmount = 최소로 받을 Token양
+    function tonToTokenMulti(
+        address _projectToken,
+        uint256 _amount,
+        uint256 _minimumAmount
+    )
+        public 
+    {   
+        uint256 allowance = IERC20(ton).allowance(address(this),wton);
+        uint256 wTonSwapAmount = _toRAY(_amount);
+        if(allowance < _amount) {
+            needapprove(_amount);
+        }
+        IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
+        //ton -> wton으로 변경
+        IWTON(wton).swapFromTON(_amount);
 
-    // function tonToTokenMulti(
-    //     uint256 _amount
-    // )
-    //     public 
-    // {   
+        ISwapRouter.ExactInputParams memory params =
+            ISwapRouter.ExactInputParams({
+                path: abi.encodePacked(wton, poolFee, tos, poolFee, _projectToken),
+                recipient: msg.sender,
+                deadline: block.timestamp,
+                amountIn: wTonSwapAmount,
+                amountOutMinimum: _minimumAmount
+            });
+        uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+        IERC20(_projectToken).safeTransfer(msg.sender, amountOut);
+    }
 
-    //     ISwapRouter.ExactInputParams memory params =
-    //         ISwapRouter.ExactInputParams({
-    //             path: abi.encodePacked(DAI, poolFee, USDC, poolFee, WETH9),
-    //             recipient: msg.sender,
-    //             deadline: block.timestamp,
-    //             amountIn: amountIn,
-    //             amountOutMinimum: 0
-    //         });
-    // }
+    // 6. ProjectToken -> ProjectToken (LYDA -> TOS -> AURA)
+    // ProjectToken -> TOS -> ProjectToken의 멀티 스왑
+    function tokenToToken(
+        address _inputaddr,
+        address _outputaddr,
+        uint256 _amount
+    )   
+        public
+    {
+
+    }
 
     function tokenABtest(
         address _tokenA,
@@ -326,15 +385,15 @@ contract Swap is OnApprove{
         }
     }
 
-    //필요없는듯?
-    function needapproveWton() public {
-        IERC20(wton).approve(
-            ton,
-            type(uint256).max
-        );
-    }
+    // function needapproveWton() public {
+    //     IERC20(wton).approve(
+    //         ton,
+    //         type(uint256).max
+    //     );
+    // }
 
     /* internal function */
+
     function _tonToWTON(address _sender, uint256 _amount) internal {
         needapprove(_amount);
         uint256 wTonSwapAmount = _toRAY(_amount);

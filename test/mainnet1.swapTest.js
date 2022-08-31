@@ -61,6 +61,9 @@ let ton;
 let wton;
 let tos;
 let weth;
+let aura;
+
+let minimumAmount;
 
 const tokenPooluniAmount = ethers.utils.parseUnits("100000", 18);
 const wtonPooluniAmount = ethers.utils.parseUnits("100000", 27);
@@ -84,6 +87,7 @@ let uniswapInfo={
 }
  
 let tonAddress = "0x2be5e8c109e2197D077D13A82dAead6a9b3433C5";
+let auraAddress = "0xaEC59E5b4f8DbF513e260500eA96EbA173F74149"
 
 describe("swap", function () {
 
@@ -128,6 +132,10 @@ describe("swap", function () {
         it("#1-4. setting the WETH", async () => {
             weth = new ethers.Contract(uniswapInfo.weth, WETH_ABI, ethers.provider );
         })
+
+        it("#1-5. setting the AURA", async () => {
+            aura = new ethers.Contract(auraAddress, TOS_ABI.abi, ethers.provider ); 
+        })
     });
 
     describe("#2. Deploy the TONSwapperContract", async () => {
@@ -136,6 +144,7 @@ describe("swap", function () {
             tonSwapper = await tonSwapperFactory.deploy(
                 wton.address, 
                 ton.address,
+                tos.address,
                 uniswapInfo.swapRouter
             );
             await tonSwapper.deployed();
@@ -181,7 +190,7 @@ describe("swap", function () {
         })
 
         it("multiQuoter test1 callstatic(wton -> eth -> tos)", async () => {
-            let tx = await tonSwapper.callStatic.multiQuoter(wton.address,weth.address,tos.address,oneWTON);
+            let tx = await tonSwapper.callStatic.multiQuoterInputWTONAmount(wton.address,weth.address,tos.address,oneWTON);
             console.log("tosAmount : ", Number(tx));
         })
     })
@@ -227,14 +236,14 @@ describe("swap", function () {
         })
     })
 
-    describe("#5. test the TON -> Token(TOS) swap", async () => {
+    describe("#5. test the TON -> Token(TOS) singleSwap", async () => {
         it("#5-1-1. don't tonToToken before approve", async () => {
             let tx = tonSwapper.connect(admin).tonToToken(tonuniAmount,weth.address);
 
             await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
         })
 
-        it("#5-1-2. tonToTOken after approve (TON -> TOS swap)", async () => {
+        it("#5-1-2. tonToToken after approve (TON -> TOS swap)", async () => {
             let beforeAmount = await tos.balanceOf(admin.address);
             console.log("beforeAmount :",beforeAmount);
             expect(beforeAmount).to.be.equal(0);
@@ -265,6 +274,22 @@ describe("swap", function () {
             let afterTONamount = await ton.balanceOf(admin.address);
             let result = Number(afterTONamount)-Number(beforeTONamount);
             expect(Number(result)).to.be.equal(Number(oneETH));
+        })
+    })
+
+    describe("#7. ton To Token multiSwap", async () => {
+        it("#7-1. calculate the minimumAmount for Get AURA", async () => {
+            let tx = await tonSwapper.callStatic.multiQuoterInputTONAmount(wton.address,tos.address,auraAddress,oneETH);
+            console.log("tosAmount : ", Number(tx));
+            minimumAmount = Number(tx)/100*95;
+        })
+
+        it("#7-2. swap the TON -> WTON -> TOS -> AURA", async () => {
+            let beforeAURAamount = await aura.balanceOf(admin.address);
+            await tonSwapper.connect(admin).tonToTokenMulti(auraAddress,oneETH,minimumAmount);
+            let afterARUAamount = await aura.balanceOf(admin.address);
+            let result = Number(afterARUAamount)-Number(beforeAURAamount);
+            expect(Number(result)).to.be.gte(Number(minimumAmount));
         })
     })
 });
