@@ -4,6 +4,15 @@
     3) you deploy ton, wton that need
 */  
 const { messagePrefix } = require("@ethersproject/hash");
+const {
+    BigNumber,
+    FixedFormat,
+    FixedNumber,
+    formatFixed,
+    parseFixed
+    // Types
+    // BigNumberish
+} = require("@ethersproject/bignumber");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const {
@@ -195,40 +204,31 @@ describe("swap", function () {
         })
     })
 
-    // describe("#tokenAB test", async () => {
-    //     it("tokenAB test", async () => {
-    //         await tonSwapper.connect(admin).tokenABtest(
-    //             wton.address,
-    //             tos.address,
-    //             oneWTON
-    //         )
-    //     })
-
-    //     it("tokenBA test", async () => {
-    //         await tonSwapper.connect(admin).tokenABtest(
-    //             tos.address,
-    //             wton.address,
-    //             oneETH
-    //         )
-    //     })
-
-    // })
-
     describe("#4. test the token -> TON swap", async () => {
-        it("#4-1. don't tokenToTON before approve", async () => {
-            let tx = tonSwapper.connect(admin).tokenToTON(tonuniAmount,tos.address);
-
-            await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds balance")
+        it("#4-1. minimumAmount WETH -> WTON", async () => {
+            let tx = await tonSwapper.callStatic.quoterTest(weth.address);
+            console.log("wtonAmount : ", Number(tx));
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber95 = BigNumber.from("95")
+            minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
+            console.log("minimumAmount : ", minimumAmount);
+            console.log("minimumAmount : ", Number(minimumAmount));
         })
 
-        it("#4-2. tokenToTON after approve (WETH -> TON swap)", async () => {
+        it("#4-2. don't tokenToTON before approve", async () => {
+            let tx = tonSwapper.connect(admin).tokenToTON(weth.address,oneETH,minimumAmount);
+
+            await expect(tx).to.be.revertedWith("SafeERC20: low-level call failed")
+        })
+
+        it("#4-3. tokenToTON after approve (WETH -> TON swap)", async () => {
             let beforeAmount = await ton.balanceOf(admin.address);
             if(beforeAmount == 0){
                 expect(beforeAmount).to.be.equal(0);
             }
 
             await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            await tonSwapper.connect(admin).tokenToTON(oneETH,weth.address);
+            await tonSwapper.connect(admin).tokenToTON(weth.address,oneETH,minimumAmount);
            
             let afterAmount = await ton.balanceOf(admin.address);
             console.log("afterAmount :", Number(afterAmount));
@@ -237,19 +237,29 @@ describe("swap", function () {
     })
 
     describe("#5. test the TON -> Token(TOS) singleSwap", async () => {
-        it("#5-1-1. don't tonToToken before approve", async () => {
-            let tx = tonSwapper.connect(admin).tonToToken(tonuniAmount,weth.address);
+        it("#5-1. minimumAmount TON-> TOS", async () => {
+            let tx = await tonSwapper.callStatic.quoterTest2(tos.address);
+            console.log("tosAmount : ", Number(tx));
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber95 = BigNumber.from("95")
+            minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
+            console.log("minimumAmount : ", minimumAmount);
+            console.log("minimumAmount : ", Number(minimumAmount));
+        })
+
+        it("#5-2. don't tonToToken before approve", async () => {
+            let tx = tonSwapper.connect(admin).tonToToken(tos.address,oneETH,minimumAmount);
 
             await expect(tx).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
         })
 
-        it("#5-1-2. tonToToken after approve (TON -> TOS swap)", async () => {
+        it("#5-3. tonToToken after approve (TON -> TOS swap)", async () => {
             let beforeAmount = await tos.balanceOf(admin.address);
             console.log("beforeAmount :",beforeAmount);
             expect(beforeAmount).to.be.equal(0);
 
-            await ton.connect(admin).approve(tonSwapper.address,tonuniAmount);
-            await tonSwapper.connect(admin).tonToToken(tonuniAmount,tos.address);
+            await ton.connect(admin).approve(tonSwapper.address,oneETH);
+            await tonSwapper.connect(admin).tonToToken(tos.address,oneETH,minimumAmount);
 
             let afterAmount = await tos.balanceOf(admin.address);
             console.log("afterAmount :",afterAmount);
@@ -281,14 +291,44 @@ describe("swap", function () {
         it("#7-1. calculate the minimumAmount for Get AURA", async () => {
             let tx = await tonSwapper.callStatic.multiQuoterInputTONAmount(wton.address,tos.address,auraAddress,oneETH);
             console.log("tosAmount : ", Number(tx));
-            minimumAmount = Number(tx)/100*95;
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber95 = BigNumber.from("95")
+            minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
+            console.log("minimumAmount : ", minimumAmount);
+            console.log("minimumAmount : ", Number(minimumAmount));
         })
 
         it("#7-2. swap the TON -> WTON -> TOS -> AURA", async () => {
             let beforeAURAamount = await aura.balanceOf(admin.address);
+            console.log("beforeAURAamount : ", Number(beforeAURAamount));
+            await ton.connect(admin).approve(tonSwapper.address,oneETH);
             await tonSwapper.connect(admin).tonToTokenMulti(auraAddress,oneETH,minimumAmount);
             let afterARUAamount = await aura.balanceOf(admin.address);
+            console.log("afterARUAamount : ", Number(afterARUAamount));
             let result = Number(afterARUAamount)-Number(beforeAURAamount);
+            expect(Number(result)).to.be.gte(Number(minimumAmount));
+        })
+    })
+
+    describe("#8. Token To TON multiSwap", async () => {
+        it("#8-1. calculate the minimumAmount for TON", async () => {
+            let tx = await tonSwapper.callStatic.multiQuoterInputTokenAmount(auraAddress,oneETH);
+            console.log("tonAmount : ", Number(tx.tonAmount));
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber95 = BigNumber.from("95")
+            minimumAmount = tx.tonAmount.mul(bigNumber95).div(bigNumber100);
+            console.log("minimumAmount : ", minimumAmount);
+            console.log("minimumAmount : ", Number(minimumAmount));
+        })
+
+        it("#8-2. swap the ARUA -> TOS -> WTON -> TON", async () => {
+            let beforeTONamount = await ton.balanceOf(admin.address);
+            console.log("beforeTONamount : ", Number(beforeTONamount));
+            await aura.connect(admin).approve(tonSwapper.address,oneETH);
+            await tonSwapper.connect(admin).tokenToTonMulti(auraAddress,oneETH,minimumAmount);
+            let afterTONamount = await ton.balanceOf(admin.address);
+            console.log("afterTONamount : ", Number(afterTONamount));
+            let result = Number(afterTONamount)-Number(beforeTONamount);
             expect(Number(result)).to.be.gte(Number(minimumAmount));
         })
     })
