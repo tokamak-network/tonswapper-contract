@@ -126,7 +126,6 @@ contract Swap is OnApprove{
 
     //WTON -> A -> B
     function multiQuoterInputWTONAmount(
-        address _firstToken,
         address _secondToken,
         address _thirdToken,
         uint256 inputAmount
@@ -135,7 +134,7 @@ contract Swap is OnApprove{
         returns (uint256)
     {
         uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
-            _firstToken,
+            wton,
             _secondToken,
             3000,
             inputAmount,
@@ -156,7 +155,6 @@ contract Swap is OnApprove{
 
     //TON -> WTON -> A -> B
     function multiQuoterInputTONAmount(
-        address _firstToken,
         address _secondToken,
         address _thirdToken,
         uint256 inputAmount
@@ -167,7 +165,7 @@ contract Swap is OnApprove{
         uint256 wTonSwapAmount = _toRAY(inputAmount);
 
         uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
-            _firstToken,
+            wton,
             _secondToken,
             3000,
             wTonSwapAmount,
@@ -216,6 +214,40 @@ contract Swap is OnApprove{
         console.log("wtonAmount : %s", wtonAmount);
         console.log("tonAmount : %s", tonAmount);
         return (wtonAmount,tonAmount);
+    }
+
+    //token -> TOS -> token
+    //token -> WTON -> token
+    //_firstToken = token
+    //_secondToken = TOS or WTON
+    //_thirdToken = token
+    function multiQuoterTokenToToken(
+        address _firstToken,
+        address _secondToken,
+        address _thirdToken,
+        uint256 inputAmount
+    )
+        public
+        returns (uint256)
+    {
+        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+            _firstToken,
+            _secondToken,
+            3000,
+            inputAmount,
+            0
+        );
+        console.log("amountOut1 : %s", amountOut1);
+
+        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
+            _secondToken,
+            _thirdToken,
+            3000,
+            amountOut1,
+            0
+        );
+        console.log("amountOut2 : %s", amountOut2);
+        return amountOut2;
     }
 
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
@@ -363,11 +395,24 @@ contract Swap is OnApprove{
     function tokenToToken(
         address _inputaddr,
         address _outputaddr,
-        uint256 _amount
+        uint256 _amount,
+        uint256 _minimumAmount
     )   
         public
     {
+        IERC20(_inputaddr).safeTransferFrom(msg.sender,address(this), _amount);
+        IERC20(_inputaddr).approve(address(uniswapRouter),_amount);
 
+        ISwapRouter.ExactInputParams memory params =
+            ISwapRouter.ExactInputParams({
+                path: abi.encodePacked(_inputaddr, poolFee, tos, poolFee, _outputaddr),
+                recipient: msg.sender,
+                deadline: block.timestamp,
+                amountIn: _amount,
+                amountOutMinimum: _minimumAmount
+            });
+        uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+        console.log("amountOut : %s", amountOut);
     }
 
     function tokenABtest(
