@@ -155,7 +155,7 @@ describe("swap", function () {
 
     describe("#2. Deploy the TONSwapperContract", async () => {
         it("#2-1. deploy swap contract", async () => {
-            const tonSwapperFactory = await ethers.getContractFactory("Swap");
+            const tonSwapperFactory = await ethers.getContractFactory("Swapper");
             tonSwapper = await tonSwapperFactory.deploy(
                 wton.address, 
                 ton.address,

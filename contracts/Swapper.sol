@@ -16,6 +16,9 @@ import "hardhat/console.sol";
 
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
 
+import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
+import "./SwapperStorage.sol";
+
 
 interface IIUniswapV3Factory {
     function getPool(address,address,uint24) external view returns (address);
@@ -41,19 +44,11 @@ interface IIUniswapV3Pool {
 }
 
 
-contract Swap is OnApprove{
+contract Swapper is 
+    SwapperStorage,
+    OnApprove
+{
     using SafeERC20 for IERC20;
-
-    address public wton;            //decimal = 27 (RAY)
-    address public ton;             //decimal = 18 (WAD)
-    address public tos;             //decimal = 18 (WAD)
-
-    uint24 public constant poolFee = 3000;
-
-    ISwapRouter public uniswapRouter;
-
-    IQuoter v3Quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);     //mainnet
-
 
     constructor(
         address _wton,
