@@ -4,11 +4,23 @@ pragma solidity ^0.8.0;
 import "./SwapperStorage.sol";
 import "./proxy/BaseProxy.sol";
 
+import { ERC165Storage } from "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 contract SwapperProxy is
     SwapperStorage,
-    BaseProxy
-{
+    BaseProxy,
+    ERC165Storage
+{   
+    constructor() {
+        bytes4 OnApproveSelector= bytes4(keccak256("onApprove(address,address,uint256,bytes)"));
+
+        _registerInterface(OnApproveSelector);
+    }
+
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Storage, AccessControl) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 
     function initialize(
         address _wton,

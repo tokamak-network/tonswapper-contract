@@ -51,15 +51,7 @@ contract Swapper is
     using SafeERC20 for IERC20;
 
     constructor(
-        address _wton,
-        address _ton,
-        address _tos,
-        address _uniswapRouter
     ) {
-        wton = _wton;
-        ton = _ton;
-        tos = _tos;
-        uniswapRouter = ISwapRouter(_uniswapRouter);
     }   
 
     function onApprove(

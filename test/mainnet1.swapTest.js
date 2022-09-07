@@ -40,10 +40,13 @@ const TON_ABI = require("../abis/TON.json");
 const WTON_ABI = require("../abis/WTON.json");
 const TOS_ABI = require("../abis/TOS.json");
 const WETH_ABI = require("../abis/WETH.json");
+const SWAP_ABI = require("../artifacts/contracts/Swapper.sol/Swapper.json");
 
 let ico20Contracts;
 let defaultSender;
 let tonSwapper;
+let tonSwapperProxy;
+let tonSwapperLogic;
 
 let wtonuniAmount = ethers.utils.parseUnits("10", 27);
 let tonuniAmount = ethers.utils.parseUnits("10", 18);
@@ -156,14 +159,31 @@ describe("swap", function () {
     describe("#2. Deploy the TONSwapperContract", async () => {
         it("#2-1. deploy swap contract", async () => {
             const tonSwapperFactory = await ethers.getContractFactory("Swapper");
-            tonSwapper = await tonSwapperFactory.deploy(
-                wton.address, 
+            tonSwapperLogic = await tonSwapperFactory.deploy(
+            );
+            await tonSwapperLogic.deployed();
+            // console.log(tonSwapper.address);
+        })
+
+        it("#2-2. deploy swapProxy contract and initialize", async () => {
+            const tonSwapProxy = await ethers.getContractFactory("SwapperProxy");
+            tonSwapperProxy = await tonSwapProxy.deploy();
+            await tonSwapperProxy.deployed();
+
+            await tonSwapperProxy.connect(admin).upgradeTo(tonSwapperLogic.address);
+        })
+
+        it("#2-3. swapProxy initialize", async () => {
+            await tonSwapperProxy.initialize(
+                wton.address,
                 ton.address,
                 tos.address,
                 uniswapInfo.swapRouter
-            );
-            await tonSwapper.deployed();
-            // console.log(tonSwapper.address);
+            )
+        })
+
+        it("#2-4. swapProxy connection", async () => {
+            tonSwapper = new ethers.Contract( tonSwapperProxy.address, SWAP_ABI.abi, ethers.provider);
         })
 
         it("#2-2. ETH deposit and get WETH ", async () => {
@@ -287,6 +307,28 @@ describe("swap", function () {
             let beforeTONamount = await ton.balanceOf(admin.address);
             await wton.connect(admin).approve(tonSwapper.address,oneWTON);
             await tonSwapper.connect(admin).wtonToTON(oneWTON);
+            let afterTONamount = await ton.balanceOf(admin.address);
+            let result = Number(afterTONamount)-Number(beforeTONamount);
+            expect(Number(result)).to.be.equal(Number(oneETH));
+        })
+
+        it("#6-3. approveAndCall ton -> wton test", async () => {
+            let beforeWTONamount = await wton.balanceOf(admin.address);
+            
+            let data = 0x01;
+            await ton.connect(admin).approveAndCall(tonSwapper.address,oneETH,data);
+
+            let afterWTONamount = await wton.balanceOf(admin.address);
+            let result = Number(afterWTONamount)-Number(beforeWTONamount);
+            expect(Number(result)).to.be.equal(Number(oneWTON)); 
+        })
+
+        it("#6-4. approveAncCall wton -> ton test", async () => {
+            let beforeTONamount = await ton.balanceOf(admin.address);
+
+            let data = 0x01;
+            await wton.connect(admin).approveAndCall(tonSwapper.address,oneWTON,data);
+
             let afterTONamount = await ton.balanceOf(admin.address);
             let result = Number(afterTONamount)-Number(beforeTONamount);
             expect(Number(result)).to.be.equal(Number(oneETH));
