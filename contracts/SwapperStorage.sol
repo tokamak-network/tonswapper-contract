@@ -3,12 +3,15 @@ pragma solidity ^0.8.0;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
+import "./interfaces/IWETH.sol";
 
 contract SwapperStorage  {
 
     address public wton;            //decimal = 27 (RAY)
     address public ton;             //decimal = 18 (WAD)
     address public tos;             //decimal = 18 (WAD)
+
+    IWETH public _WETH; 
 
     uint24 public constant poolFee = 3000;
 

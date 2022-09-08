@@ -26,7 +26,8 @@ contract SwapperProxy is
         address _wton,
         address _ton,
         address _tos,
-        address _uniswapRouter
+        address _uniswapRouter,
+        address _weth
     )
         external onlyProxyOwner
     {
@@ -35,6 +36,7 @@ contract SwapperProxy is
         ton = _ton;
         tos = _tos;
         uniswapRouter = ISwapRouter(_uniswapRouter);
+        _WETH = IWETH(_weth);
     }
 
 }

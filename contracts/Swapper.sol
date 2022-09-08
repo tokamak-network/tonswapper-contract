@@ -5,54 +5,35 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { OnApprove } from "./interfaces/OnApprove.sol";
 
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-
 import "./libraries/FullMath.sol";
 import "./libraries/TickMath.sol";
 import "./libraries/OracleLibrary.sol";
+import "./libraries/Path.sol";
 
 import "./interfaces/IWTON.sol";
 import "hardhat/console.sol";
 
-import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
-
-import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
 import "./SwapperStorage.sol";
-
-
-interface IIUniswapV3Factory {
-    function getPool(address,address,uint24) external view returns (address);
-}
 
 interface IIUniswapV3Pool {
     function token0() external view returns (address);
     function token1() external view returns (address);
 
-    function slot0()
-        external
-        view
-        returns (
-            uint160 sqrtPriceX96,
-            int24 tick,
-            uint16 observationIndex,
-            uint16 observationCardinality,
-            uint16 observationCardinalityNext,
-            uint8 feeProtocol,
-            bool unlocked
-        );
-
+    function swap(
+        address recipient,
+        bool zeroForOne,
+        int256 amountSpecified,
+        uint160 sqrtPriceLimitX96,
+        bytes calldata data
+    ) external returns (int256 amount0, int256 amount1);
 }
-
 
 contract Swapper is 
     SwapperStorage,
     OnApprove
 {
+    using Path for bytes;
     using SafeERC20 for IERC20;
-
-    constructor(
-    ) {
-    }   
 
     function onApprove(
         address sender,
@@ -237,6 +218,44 @@ contract Swapper is
         return amountOut2;
     }
 
+    function pathCheck(
+        address inputToken,
+        address outputToken,
+        uint24 fee
+    )
+        public
+        view
+        returns (bool)
+    {
+        bytes memory path = abi.encodePacked(inputToken, fee, outputToken);
+        bool hasMultiplePools = path.hasMultiplePools();
+        (address tokenIn, address tokenOut, uint24 fee_) = path.decodeFirstPool();
+        console.log("tokenIn : %s", tokenIn);
+        console.log("tokenOut : %s", tokenOut);
+        console.log("fee : %s", fee_);
+        console.log("hasMultiplePools : %s", hasMultiplePools);
+
+        return hasMultiplePools;
+    }
+
+    // function quoteExactInput(bytes memory path, uint256 amountIn) external override returns (uint256 amountOut) {
+    //     while (true) {
+    //         bool hasMultiplePools = path.hasMultiplePools();
+
+    //         (address tokenIn, address tokenOut, uint24 fee) = path.decodeFirstPool();
+
+    //         // the outputs of prior swaps become the inputs to subsequent ones
+    //         amountIn = quoteExactInputSingle(tokenIn, tokenOut, fee, amountIn, 0);
+
+    //         // decide whether to continue or terminate
+    //         if (hasMultiplePools) {
+    //             path = path.skipToken();
+    //         } else {
+    //             return amountIn;
+    //         }
+    //     }
+    // } 
+
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
         _tonToWTON(msg.sender,_amount);  
@@ -250,22 +269,31 @@ contract Swapper is
     }
 
     // 3. ton to token (TON -> WTON -> TOS)
-    // _amount : tonAmount
+    // _amount : tonAmount (_checkWTON이 true면 wtonAmount, _checkWTON이 false면 tonAmount)
     // _address : getTokenAddress
-    // _minimumAmount = 최소로 받을 token양
+    // _minimumAmount : 최소로 받을 token양
+    // _checkWTON : WTON -> token으로로 변경할 것인지?
     function tonToToken(
         address _address,
         uint256 _amount,
-        uint256 _minimumAmount
+        uint256 _minimumAmount,
+        bool _checkWTON
     ) 
         public 
-    {
-        uint256 wTonSwapAmount = _toRAY(_amount);
-        needapprove(_amount);
-
-        IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
-        //ton -> wton으로 변경
-        IWTON(wton).swapFromTON(_amount);
+    {  
+        uint256 wTonSwapAmount;
+        if(_checkWTON){
+            //WTONamount를 바로 받아서 보냄
+            wTonSwapAmount = _amount;
+            IERC20(wton).safeTransferFrom(msg.sender,address(this), wTonSwapAmount);
+        } else {
+            //TONamount를 받아서 보냄
+            wTonSwapAmount = _toRAY(_amount);
+            needapprove(_amount);
+            IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
+            //ton -> wton으로 변경
+            IWTON(wton).swapFromTON(_amount);
+        }
 
         IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
     
@@ -279,7 +307,6 @@ contract Swapper is
             });
         // wton -> token 변경
         uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
-        // IERC20(_address).safeTransfer(msg.sender, amountOut);
     }
 
     // 4. token -> TON (TOS -> WTON -> TON)
@@ -287,16 +314,28 @@ contract Swapper is
     // 컨트랙트는 token을 uniswapRouter에 approve 해주어야함
     // _address : tokenAddress
     // _amount : tokenAmount
-    // _minimumAmount = 최소로 받을 wton양
+    // _minimumAmount : 최소로 받을 wton양
+    // _checkWTON : 최종 받는 토큰을 TON으로 받을 것인지 WTON으로 받을 것인지?
+    // _wrapEth : eth로 입금할때 체크 (eth로 가능하게함)
     function tokenToTON(
         address _address,
         uint256 _amount,
-        uint256 _minimumAmount
+        uint256 _minimumAmount,
+        bool _checkWTON,
+        bool _wrapEth
     )
         public
+        payable
     {
-        //token을 받음
-        IERC20(_address).safeTransferFrom(msg.sender,address(this), _amount);
+        if (_wrapEth) {
+            require(msg.value == _amount, "wrong msg.value");
+            require(_address == address(_WETH), "need the wethAddress");
+            _WETH.deposit{value: _amount}();
+        } else {
+            require(msg.value == 0, "msg.value should be 0");
+            //token을 받음
+            IERC20(_address).safeTransferFrom(msg.sender,address(this), _amount);
+        }
         //token을 wton으로 변경하기 위한 사전 허락
         IERC20(_address).approve(address(uniswapRouter),_amount);
         
@@ -312,28 +351,43 @@ contract Swapper is
         // token -> wton 변경
         uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
         
-        // wton -> ton 으로 변경과 동시에 transfer함
-        IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
+        if(_checkWTON) {
+            //wton으로 바로 보내줌
+            IWTON(wton).transfer(msg.sender,amountOut);
+        } else {
+            // wton -> ton 으로 변경과 동시에 transfer함
+            IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
+        }
     }
 
-    // 5. TON -> ProjectToken (multiSwap) (TON->WTON->TOS->LYDA)
+    // 5. TON -> ProjectToken (multihop Swap) (TON->WTON->TOS->LYDA)
     // WTON -> TOKEN -> TOKEN의 멀티 스왑 (TON->WTON->TOS->LYDA)
     // poolFee를 따로 받던가 3000 고정이던가
     // _projectToken = 최종적으로 받을 token 주소
     // _amount = 넣을 TON양
     // _minimumAmount = 최소로 받을 Token양
+    // _checkWTON = 초기 token을 wton으로 받을 것인지? (wton -> tos -> lyda)
     function tonToTokenMulti(
         address _projectToken,
         uint256 _amount,
-        uint256 _minimumAmount
+        uint256 _minimumAmount,
+        bool _checkWTON
     )
         public 
     {   
-        uint256 wTonSwapAmount = _toRAY(_amount);
-        needapprove(_amount);
-        IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
-        //ton -> wton으로 변경
-        IWTON(wton).swapFromTON(_amount);
+        uint256 wTonSwapAmount;
+        if(_checkWTON){
+            //WTONamount를 바로 받아서 보냄
+            wTonSwapAmount = _amount;
+            IERC20(wton).safeTransferFrom(msg.sender,address(this), wTonSwapAmount);
+        } else {
+            //TONamount를 받아서 보냄
+            wTonSwapAmount = _toRAY(_amount);
+            needapprove(_amount);
+            IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
+            //ton -> wton으로 변경
+            IWTON(wton).swapFromTON(_amount);
+        }
         console.log("wtonAmount : %s", wTonSwapAmount);
 
         IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
@@ -354,10 +408,15 @@ contract Swapper is
     // 6, ProjectToken -> TON (multiSwap) (AURA -> TOS -> WTON -> TON)
     // AURA -> TOS -> WTON의 멀티스왑
     // 최종적으로 WTON -> TON 으로 변경 후 보냄
+    // _projectToken = 바꿀려고하는 token 주소
+    // _amount = 넣을 Token 양
+    // _minimumAmount = 최소로 받을 WTON 양
+    // _checkWTON = 토큰을 WTON으로 받을 것인지 TON으로 받을 것인지
     function tokenToTonMulti(
         address _projectToken,
         uint256 _amount,
-        uint256 _minimumAmount
+        uint256 _minimumAmount,
+        bool _checkWTON
     )
         public
     {
@@ -374,20 +433,39 @@ contract Swapper is
             });
         uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
         console.log("amountOut : %s", amountOut);
-        IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
+
+        if(_checkWTON) {
+            //wton으로 바로 보내줌
+            IWTON(wton).transfer(msg.sender,amountOut);
+        } else {
+            // wton -> ton 으로 변경과 동시에 transfer함
+            IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
+        }
     }
 
     // 7. ProjectToken -> ProjectToken (LYDA -> TOS -> AURA)
     // ProjectToken -> TOS -> ProjectToken의 멀티 스왑
+    // _wrapEth : eth로 입금할때 체크 (eth로 가능하게함) (ETH -> TOS -> LYDA)
     function tokenToToken(
         address _inputaddr,
         address _outputaddr,
         uint256 _amount,
-        uint256 _minimumAmount
+        uint256 _minimumAmount,
+        bool _wrapEth
     )   
         public
+        payable
     {
-        IERC20(_inputaddr).safeTransferFrom(msg.sender,address(this), _amount);
+        if (_wrapEth) {
+            require(msg.value == _amount, "wrong msg.value");
+            require(_inputaddr == address(_WETH), "need the wethAddress");
+            _WETH.deposit{value: _amount}();
+        } else {
+            require(msg.value == 0, "msg.value should be 0");
+            //token을 받음
+            IERC20(_inputaddr).safeTransferFrom(msg.sender,address(this), _amount);
+        }
+
         IERC20(_inputaddr).approve(address(uniswapRouter),_amount);
 
         ISwapRouter.ExactInputParams memory params =
@@ -401,22 +479,6 @@ contract Swapper is
         uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
         console.log("amountOut : %s", amountOut);
     }
-
-    function tokenABtest(
-        address _tokenA,
-        address _tokenB,
-        uint256 _amount
-    ) 
-        public 
-    {
-
-        IIUniswapV3Pool pool = IIUniswapV3Pool(getPoolAddress2(_tokenA,_tokenB));
-
-        (uint256 amountOutMinimum, , )
-            = limitPrameters(_amount, address(pool), _tokenA, _tokenB, 18);
-        console.log("amountOutMinimum : %s", amountOutMinimum);
-    }
-
 
     function needapprove(
         uint256 _amount
@@ -472,93 +534,4 @@ contract Swapper is
         return v / 10 ** 9;
     }
 
-    function getPoolAddress(
-        address _token
-    ) public view returns(address) {
-        address factory = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
-        return IIUniswapV3Factory(factory).getPool(wton, _token, 3000);
-    }
-
-    function getPoolAddress2(
-        address _tokenA,
-        address _tokenB
-    ) public view returns(address) {
-        address factory = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
-        return IIUniswapV3Factory(factory).getPool(_tokenA, _tokenB, 3000);
-    }
-
-
-    function getMiniTick(int24 tickSpacings) public pure returns (int24){
-           return (TickMath.MIN_TICK / tickSpacings) * tickSpacings ;
-    }
-
-    function getMaxTick(int24 tickSpacings) public pure  returns (int24){
-           return (TickMath.MAX_TICK / tickSpacings) * tickSpacings ;
-    }
-
-    function acceptMinTick(int24 _tick, int24 _tickSpacings, int24 _acceptTickInterval) public pure returns (int24)
-    {
-
-        int24 _minTick = getMiniTick(_tickSpacings);
-        int24 _acceptMinTick = _tick - (_tickSpacings * _acceptTickInterval);
-
-        if(_minTick < _acceptMinTick) return _acceptMinTick;
-        else return _minTick;
-    }
-
-    function acceptMaxTick(int24 _tick, int24 _tickSpacings, int24 _acceptTickInterval) public pure returns (int24)
-    {
-        int24 _maxTick = getMaxTick(_tickSpacings);
-        int24 _acceptMinTick = _tick + (_tickSpacings * _acceptTickInterval);
-
-        if(_maxTick < _acceptMinTick) return _maxTick;
-        else return _acceptMinTick;
-    }
-
-    function getQuoteAtTick(
-        int24 tick,
-        uint128 amountIn,
-        address baseToken,
-        address quoteToken
-    ) public pure returns (uint256 amountOut) {
-        return OracleLibrary.getQuoteAtTick(tick, amountIn, baseToken, quoteToken);
-    }
-
-    function limitPrameters(
-        uint256 amountIn,
-        address _pool,
-        address token0,
-        address token1,
-        int24 acceptTickCounts
-    ) public view returns  (uint256 amountOutMinimum, uint256 priceLimit, uint160 sqrtPriceX96Limit)
-    {
-        IIUniswapV3Pool pool = IIUniswapV3Pool(_pool);
-        (, int24 tick,,,,,) =  pool.slot0();
-
-        int24 _tick = tick;
-        if(token0 < token1) {
-            _tick = tick - acceptTickCounts * 60;
-            if(_tick < TickMath.MIN_TICK ) _tick =  TickMath.MIN_TICK ;
-        } else {
-            _tick = tick + acceptTickCounts * 60;
-            if(_tick > TickMath.MAX_TICK ) _tick =  TickMath.MAX_TICK ;
-        }
-        address token1_ = token1;
-        address token0_ = token0;
-        return (
-              getQuoteAtTick(
-                _tick,
-                uint128(amountIn),
-                token0_,
-                token1_
-                ),
-             getQuoteAtTick(
-                _tick,
-                uint128(10**27),
-                token0_,
-                token1_
-             ),
-             TickMath.getSqrtRatioAtTick(_tick)
-        );
-    }
 }
