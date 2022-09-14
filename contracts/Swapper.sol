@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { OnApprove } from "./interfaces/OnApprove.sol";
-
 import "./libraries/FullMath.sol";
 import "./libraries/TickMath.sol";
 import "./libraries/OracleLibrary.sol";
@@ -14,6 +13,9 @@ import "./interfaces/IWTON.sol";
 import "hardhat/console.sol";
 
 import "./SwapperStorage.sol";
+
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 
 interface IIUniswapV3Pool {
     function token0() external view returns (address);
@@ -35,6 +37,12 @@ contract Swapper is
     using Path for bytes;
     using SafeERC20 for IERC20;
 
+    uint256 private constant _ONE_FOR_ZERO_MASK = 1 << 255;
+    /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK)
+    uint160 private constant _MIN_SQRT_RATIO = 4295128739 + 1;
+    /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
+    uint160 private constant _MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342 - 1;
+
     function onApprove(
         address sender,
         address spender,
@@ -54,7 +62,6 @@ contract Swapper is
         }
         return true;
     }
-
 
     // 1 Token -> ? WTON
     function quoterTest(
@@ -218,6 +225,25 @@ contract Swapper is
         return amountOut2;
     }
 
+    function tokenABQuoter(
+        address _inputToken,
+        address _outputToken,
+        uint24 _fee,
+        uint256 _inputAmount
+    )
+        public
+        returns (uint256)
+    {
+        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+            _inputToken,
+            _outputToken,
+            _fee,
+            _inputAmount,
+            0
+        );
+        return amountOut1;
+    }
+
     function pathCheck(
         address inputToken,
         address outputToken,
@@ -315,8 +341,8 @@ contract Swapper is
     // _address : tokenAddress
     // _amount : tokenAmount
     // _minimumAmount : 최소로 받을 wton양
-    // _checkWTON : 최종 받는 토큰을 TON으로 받을 것인지 WTON으로 받을 것인지?
-    // _wrapEth : eth로 입금할때 체크 (eth로 가능하게함)
+    // _checkWTON : 최종 받는 토큰을 TON으로 받을 것인지 WTON으로 받을 것인지? (true = wton으로 받음, false = ton으로 받음)
+    // _wrapEth : eth로 입금할때 체크 (eth로 가능하게함) (eth로 입금할 경우 true, 그외의 토큰 false)
     function tokenToTON(
         address _address,
         uint256 _amount,
@@ -405,7 +431,7 @@ contract Swapper is
         // IERC20(_projectToken).safeTransfer(msg.sender, amountOut);
     }
 
-    // 6, ProjectToken -> TON (multiSwap) (AURA -> TOS -> WTON -> TON)
+    // 6, ProjectToken -> TON (multihop) (AURA -> TOS -> WTON -> TON)
     // AURA -> TOS -> WTON의 멀티스왑
     // 최종적으로 WTON -> TON 으로 변경 후 보냄
     // _projectToken = 바꿀려고하는 token 주소
@@ -480,10 +506,116 @@ contract Swapper is
         console.log("amountOut : %s", amountOut);
     }
 
-    function needapprove(
+    function tokenToTokenArray(
+        address[] calldata path,
+        uint24[] calldata fees,
         uint256 _amount
     ) 
         public 
+        returns (uint256 returnAmount)
+    {
+        uint256 len = path.length;
+        console.log("len : %s", len);
+        require(len > 0, "empty path");
+        require(path.length == fees.length + 1, "PATH_FEE_MISMATCH");
+        uint256 lastIndex = len - 1;
+
+        if(len > 2) {
+            IERC20(path[0]).safeTransferFrom(msg.sender,address(this), _amount);
+            uint256 minimumAmount = tokenABQuoter(path[0],path[1],fees[0],_amount)*95/100;
+            returnAmount = _arraySwap2(
+                address(this),
+                path[0], 
+                path[1], 
+                _amount, 
+                minimumAmount, 
+                fees[0]
+            );
+            for (uint256 i = 1; i < lastIndex-2; i++) {
+                minimumAmount = tokenABQuoter(path[i],path[i+1],fees[i],returnAmount)*95/100;
+                returnAmount = _arraySwap2(
+                    address(this),
+                    path[i],
+                    path[i+1],
+                    returnAmount,
+                    minimumAmount,
+                    fees[i]
+                );
+            }
+            minimumAmount = tokenABQuoter(path[lastIndex-1],path[lastIndex],fees[lastIndex-1],returnAmount)*95/100;
+        } else {
+
+        }
+    }
+
+    /* internal function */
+
+    // _recipient = 받는사람
+    // _tokenIn = 들어갈 토큰
+    // _tokenOut = 나올 토큰
+    // _amount = 들어갈 토큰 양
+    // _minimumAmount = 나올 토큰의 최소양
+    // _fee = pool의 fee
+    function _arraySwap2(
+        address _recipient,
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amount,
+        uint256 _minimumAmount,
+        uint24 _fee
+    )
+        public
+        returns (uint256 amountOut)
+    {
+        IERC20(_tokenIn).approve(address(uniswapRouter),_amount);
+
+        ISwapRouter.ExactInputParams memory params =
+            ISwapRouter.ExactInputParams({
+                path: abi.encodePacked(_tokenIn, _fee, _tokenOut),
+                recipient: _recipient,
+                deadline: block.timestamp,
+                amountIn: _amount,
+                amountOutMinimum: _minimumAmount
+            });
+        amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+    }
+
+    // function _arraySwap(
+    //     address recipient, 
+    //     address payer, 
+    //     uint256 pool, 
+    //     uint256 amount
+    // )
+    //     private
+    //     returns (uint256) 
+    // {
+    //     bool zeroForOne = pool & _ONE_FOR_ZERO_MASK == 0;
+    //     if (zeroForOne) {
+    //         (, int256 amount1) = IIUniswapV3Pool(pool).swap(
+    //             recipient,
+    //             zeroForOne,
+    //             SafeCast.toInt256(amount),
+    //             _MIN_SQRT_RATIO,
+    //             abi.encode(payer)
+    //         );
+    //         return SafeCast.toUint256(-amount1);
+    //     } else {
+    //         (int256 amount0,) = IIUniswapV3Pool(pool).swap(
+    //             recipient,
+    //             zeroForOne,
+    //             SafeCast.toInt256(amount),
+    //             _MAX_SQRT_RATIO,
+    //             abi.encode(payer)
+    //         );
+    //         return SafeCast.toUint256(-amount0);
+    //     }
+    // }
+
+
+    function needapprove(
+        uint256 _amount
+    ) 
+        internal 
     {
         if(IERC20(ton).allowance(address(this),wton) < _amount) {
             IERC20(ton).approve(
@@ -492,15 +624,6 @@ contract Swapper is
             );
         }
     }
-
-    // function needapproveWton() public {
-    //     IERC20(wton).approve(
-    //         ton,
-    //         type(uint256).max
-    //     );
-    // }
-
-    /* internal function */
 
     function _tonToWTON(address _sender, uint256 _amount) internal {
         needapprove(_amount);
