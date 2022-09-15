@@ -509,7 +509,8 @@ contract Swapper is
     function tokenToTokenArray(
         address[] calldata path,
         uint24[] calldata fees,
-        uint256 _amount
+        uint256 _amount,
+        address _getAddress
     ) 
         public 
         returns (uint256 returnAmount)
@@ -519,10 +520,11 @@ contract Swapper is
         require(len > 0, "empty path");
         require(path.length == fees.length + 1, "PATH_FEE_MISMATCH");
         uint256 lastIndex = len - 1;
+        uint256 minimumAmount;
 
         if(len > 2) {
             IERC20(path[0]).safeTransferFrom(msg.sender,address(this), _amount);
-            uint256 minimumAmount = tokenABQuoter(path[0],path[1],fees[0],_amount)*95/100;
+            minimumAmount = tokenABQuoter(path[0],path[1],fees[0],_amount)*95/100;
             returnAmount = _arraySwap2(
                 address(this),
                 path[0], 
@@ -531,8 +533,10 @@ contract Swapper is
                 minimumAmount, 
                 fees[0]
             );
-            for (uint256 i = 1; i < lastIndex-2; i++) {
-                minimumAmount = tokenABQuoter(path[i],path[i+1],fees[i],returnAmount)*95/100;
+            console.log("1");
+            for (uint256 i = 1; i < lastIndex - 1; i++) {
+                console.log("2,i %s",i);
+                minimumAmount = tokenABQuoter(path[i],path[i+1],fees[i],returnAmount)*99/100;
                 returnAmount = _arraySwap2(
                     address(this),
                     path[i],
@@ -542,7 +546,16 @@ contract Swapper is
                     fees[i]
                 );
             }
-            minimumAmount = tokenABQuoter(path[lastIndex-1],path[lastIndex],fees[lastIndex-1],returnAmount)*95/100;
+            console.log("3");
+            minimumAmount = tokenABQuoter(path[lastIndex-1],path[lastIndex],fees[lastIndex-1],returnAmount)*99/100;
+            returnAmount = _arraySwap2(
+                    _getAddress,
+                    path[lastIndex-1],
+                    path[lastIndex],
+                    returnAmount,
+                    minimumAmount,
+                    fees[lastIndex-1]
+                );
         } else {
 
         }
