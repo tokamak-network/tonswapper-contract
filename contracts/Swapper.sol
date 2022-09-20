@@ -16,6 +16,10 @@ import "./SwapperStorage.sol";
 
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
+//import contract
+//library
+//interface
+
 
 interface IIUniswapV3Pool {
     function token0() external view returns (address);
@@ -37,12 +41,6 @@ contract Swapper is
     using Path for bytes;
     using SafeERC20 for IERC20;
 
-    uint256 private constant _ONE_FOR_ZERO_MASK = 1 << 255;
-    /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK)
-    uint160 private constant _MIN_SQRT_RATIO = 4295128739 + 1;
-    /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
-    uint160 private constant _MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342 - 1;
-
     function onApprove(
         address sender,
         address spender,
@@ -51,16 +49,51 @@ contract Swapper is
     ) external override returns (bool) {
 
         console.log("Check Point#1");
-  
+        (address minimumAmount, address selector, address getTokenAddress)= _decodeApproveData(data);
+        console.log("minimumAmount : %s",minimumAmount);
+        console.log("selector : %s",selector);
+        console.log("getTokenAddress : %s",getTokenAddress);
+        uint256 minimumAmount1 = _decodeAddress(minimumAmount);
+        uint256 selector1 = _decodeAddress(selector);
+        console.log("minimumAmount1 : %s",minimumAmount1);
+        console.log("selector1 : %s",selector1);
+
         // swap owner's TON to WTON
         if (msg.sender == address(ton)) {
-            console.log("Check Point#2");
-            _tonToWTON(sender,transferAmount);
+            if (msg.sender == spender) {
+                console.log("Check Point#2");
+                _tonToWTON(sender,transferAmount);
+            }
         } else if (msg.sender == address(wton)) {
-            console.log("Check Point#3");
-            _wtonToTON(sender,transferAmount);
+            if (msg.sender == spender) {
+                console.log("Check Point#3");
+                _wtonToTON(sender,transferAmount);
+            }
         }
         return true;
+    }
+
+    function _decodeApproveData(
+        bytes calldata data
+    ) public view returns (address approveData,address selector,address getTokenAddress) {
+        // require(data.length == 0x40);
+        console.log(data.length);
+        bytes memory data1 = data[20:40];
+        bytes memory data2 = data[0:20];
+        bytes memory data3 = data[40:60];
+        console.log(data1.length);
+        console.log(data2.length);
+        assembly {
+            selector := mload(add(data2, 0x14))
+            approveData := mload(add(data1, 0x14))
+            getTokenAddress := mload(add(data3, 0x14))
+        }
+    }
+
+    function _decodeAddress(
+        address a
+    ) public returns (uint256){
+        return uint256(uint160(a));
     }
 
     // 1 Token -> ? WTON
@@ -243,44 +276,6 @@ contract Swapper is
         );
         return amountOut1;
     }
-
-    function pathCheck(
-        address inputToken,
-        address outputToken,
-        uint24 fee
-    )
-        public
-        view
-        returns (bool)
-    {
-        bytes memory path = abi.encodePacked(inputToken, fee, outputToken);
-        bool hasMultiplePools = path.hasMultiplePools();
-        (address tokenIn, address tokenOut, uint24 fee_) = path.decodeFirstPool();
-        console.log("tokenIn : %s", tokenIn);
-        console.log("tokenOut : %s", tokenOut);
-        console.log("fee : %s", fee_);
-        console.log("hasMultiplePools : %s", hasMultiplePools);
-
-        return hasMultiplePools;
-    }
-
-    // function quoteExactInput(bytes memory path, uint256 amountIn) external override returns (uint256 amountOut) {
-    //     while (true) {
-    //         bool hasMultiplePools = path.hasMultiplePools();
-
-    //         (address tokenIn, address tokenOut, uint24 fee) = path.decodeFirstPool();
-
-    //         // the outputs of prior swaps become the inputs to subsequent ones
-    //         amountIn = quoteExactInputSingle(tokenIn, tokenOut, fee, amountIn, 0);
-
-    //         // decide whether to continue or terminate
-    //         if (hasMultiplePools) {
-    //             path = path.skipToken();
-    //         } else {
-    //             return amountIn;
-    //         }
-    //     }
-    // } 
 
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
     function tonToWton(uint256 _amount) public {
@@ -592,37 +587,6 @@ contract Swapper is
             });
         amountOut = ISwapRouter(uniswapRouter).exactInput(params);
     }
-
-    // function _arraySwap(
-    //     address recipient, 
-    //     address payer, 
-    //     uint256 pool, 
-    //     uint256 amount
-    // )
-    //     private
-    //     returns (uint256) 
-    // {
-    //     bool zeroForOne = pool & _ONE_FOR_ZERO_MASK == 0;
-    //     if (zeroForOne) {
-    //         (, int256 amount1) = IIUniswapV3Pool(pool).swap(
-    //             recipient,
-    //             zeroForOne,
-    //             SafeCast.toInt256(amount),
-    //             _MIN_SQRT_RATIO,
-    //             abi.encode(payer)
-    //         );
-    //         return SafeCast.toUint256(-amount1);
-    //     } else {
-    //         (int256 amount0,) = IIUniswapV3Pool(pool).swap(
-    //             recipient,
-    //             zeroForOne,
-    //             SafeCast.toInt256(amount),
-    //             _MAX_SQRT_RATIO,
-    //             abi.encode(payer)
-    //         );
-    //         return SafeCast.toUint256(-amount0);
-    //     }
-    // }
 
 
     function needapprove(
