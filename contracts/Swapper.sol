@@ -14,8 +14,6 @@ import "hardhat/console.sol";
 
 import "./SwapperStorage.sol";
 
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-
 //import contract
 //library
 //interface
@@ -60,13 +58,25 @@ contract Swapper is
 
         // swap owner's TON to WTON
         if (msg.sender == address(ton)) {
-            if (msg.sender == spender) {
-                console.log("Check Point#2");
+            if(selector1 == 1){
+                console.log("selector = 1, ton ApproveAndCall");
+                tonToToken(sender,getTokenAddress,transferAmount,minimumAmount1,false);
+            } else if (selector1 == 2) {
+                console.log("selector = 2, ton ApproveAndCall");
+                tonToTokenMulti(sender,getTokenAddress,transferAmount,minimumAmount1,false);
+            } else {
+                console.log("ton no selectorData");
                 _tonToWTON(sender,transferAmount);
             }
         } else if (msg.sender == address(wton)) {
-            if (msg.sender == spender) {
-                console.log("Check Point#3");
+            if(selector1 == 1){
+                console.log("selector = 1, wton ApproveAndCall");
+                tonToToken(sender,getTokenAddress,transferAmount,minimumAmount1,true);
+            } else if (selector1 == 2) {
+                console.log("selector = 2");
+                tonToTokenMulti(sender,getTokenAddress,transferAmount,minimumAmount1,true);
+            } else {
+                 console.log("wton no selectorData");
                 _wtonToTON(sender,transferAmount);
             }
         }
@@ -75,8 +85,8 @@ contract Swapper is
 
     function _decodeApproveData(
         bytes calldata data
-    ) public view returns (address approveData,address selector,address getTokenAddress) {
-        // require(data.length == 0x40);
+    ) internal view returns (address approveData,address selector,address getTokenAddress) {
+        // require(data.length == 0x60);
         console.log(data.length);
         bytes memory data1 = data[20:40];
         bytes memory data2 = data[0:20];
@@ -84,15 +94,15 @@ contract Swapper is
         console.log(data1.length);
         console.log(data2.length);
         assembly {
-            selector := mload(add(data2, 0x14))
             approveData := mload(add(data1, 0x14))
+            selector := mload(add(data2, 0x14))
             getTokenAddress := mload(add(data3, 0x14))
         }
     }
 
     function _decodeAddress(
         address a
-    ) public returns (uint256){
+    ) internal pure returns (uint256){
         return uint256(uint160(a));
     }
 
@@ -290,11 +300,13 @@ contract Swapper is
     }
 
     // 3. ton to token (TON -> WTON -> TOS)
-    // _amount : tonAmount (_checkWTON이 true면 wtonAmount, _checkWTON이 false면 tonAmount)
+    // _recipient : 실행하고 받는 주소
     // _address : getTokenAddress
+    // _amount : tonAmount (_checkWTON이 true면 wtonAmount, _checkWTON이 false면 tonAmount)
     // _minimumAmount : 최소로 받을 token양
     // _checkWTON : WTON -> token으로로 변경할 것인지?
     function tonToToken(
+        address _recipient,
         address _address,
         uint256 _amount,
         uint256 _minimumAmount,
@@ -306,12 +318,12 @@ contract Swapper is
         if(_checkWTON){
             //WTONamount를 바로 받아서 보냄
             wTonSwapAmount = _amount;
-            IERC20(wton).safeTransferFrom(msg.sender,address(this), wTonSwapAmount);
+            IERC20(wton).safeTransferFrom(_recipient,address(this), wTonSwapAmount);
         } else {
             //TONamount를 받아서 보냄
             wTonSwapAmount = _toRAY(_amount);
             needapprove(_amount);
-            IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
+            IERC20(ton).safeTransferFrom(_recipient,address(this), _amount);
             //ton -> wton으로 변경
             IWTON(wton).swapFromTON(_amount);
         }
@@ -321,7 +333,7 @@ contract Swapper is
         ISwapRouter.ExactInputParams memory params =
             ISwapRouter.ExactInputParams({
                 path: abi.encodePacked(wton, poolFee, _address),
-                recipient: msg.sender,
+                recipient: _recipient,
                 deadline: block.timestamp,
                 amountIn: wTonSwapAmount,
                 amountOutMinimum: _minimumAmount
@@ -384,11 +396,13 @@ contract Swapper is
     // 5. TON -> ProjectToken (multihop Swap) (TON->WTON->TOS->LYDA)
     // WTON -> TOKEN -> TOKEN의 멀티 스왑 (TON->WTON->TOS->LYDA)
     // poolFee를 따로 받던가 3000 고정이던가
+    // _recipient : 실행하고 받는 주소
     // _projectToken = 최종적으로 받을 token 주소
     // _amount = 넣을 TON양
     // _minimumAmount = 최소로 받을 Token양
     // _checkWTON = 초기 token을 wton으로 받을 것인지? (wton -> tos -> lyda)
     function tonToTokenMulti(
+        address _recipient,
         address _projectToken,
         uint256 _amount,
         uint256 _minimumAmount,
@@ -400,12 +414,12 @@ contract Swapper is
         if(_checkWTON){
             //WTONamount를 바로 받아서 보냄
             wTonSwapAmount = _amount;
-            IERC20(wton).safeTransferFrom(msg.sender,address(this), wTonSwapAmount);
+            IERC20(wton).safeTransferFrom(_recipient,address(this), wTonSwapAmount);
         } else {
             //TONamount를 받아서 보냄
             wTonSwapAmount = _toRAY(_amount);
             needapprove(_amount);
-            IERC20(ton).safeTransferFrom(msg.sender,address(this), _amount);
+            IERC20(ton).safeTransferFrom(_recipient,address(this), _amount);
             //ton -> wton으로 변경
             IWTON(wton).swapFromTON(_amount);
         }
@@ -416,7 +430,7 @@ contract Swapper is
         ISwapRouter.ExactInputParams memory params =
             ISwapRouter.ExactInputParams({
                 path: abi.encodePacked(wton, poolFee, tos, poolFee, _projectToken),
-                recipient: msg.sender,
+                recipient: _recipient,
                 deadline: block.timestamp,
                 amountIn: wTonSwapAmount,
                 amountOutMinimum: _minimumAmount
@@ -501,6 +515,8 @@ contract Swapper is
         console.log("amountOut : %s", amountOut);
     }
 
+
+    //DAI -> ETH -> WTON 
     function tokenToTokenArray(
         address[] calldata path,
         uint24[] calldata fees,
@@ -520,7 +536,7 @@ contract Swapper is
         if(len > 2) {
             IERC20(path[0]).safeTransferFrom(msg.sender,address(this), _amount);
             minimumAmount = tokenABQuoter(path[0],path[1],fees[0],_amount)*95/100;
-            returnAmount = _arraySwap2(
+            returnAmount = _arraySwap(
                 address(this),
                 path[0], 
                 path[1], 
@@ -532,7 +548,7 @@ contract Swapper is
             for (uint256 i = 1; i < lastIndex - 1; i++) {
                 console.log("2,i %s",i);
                 minimumAmount = tokenABQuoter(path[i],path[i+1],fees[i],returnAmount)*99/100;
-                returnAmount = _arraySwap2(
+                returnAmount = _arraySwap(
                     address(this),
                     path[i],
                     path[i+1],
@@ -543,7 +559,7 @@ contract Swapper is
             }
             console.log("3");
             minimumAmount = tokenABQuoter(path[lastIndex-1],path[lastIndex],fees[lastIndex-1],returnAmount)*99/100;
-            returnAmount = _arraySwap2(
+            returnAmount = _arraySwap(
                     _getAddress,
                     path[lastIndex-1],
                     path[lastIndex],
@@ -564,7 +580,7 @@ contract Swapper is
     // _amount = 들어갈 토큰 양
     // _minimumAmount = 나올 토큰의 최소양
     // _fee = pool의 fee
-    function _arraySwap2(
+    function _arraySwap(
         address _recipient,
         address _tokenIn,
         address _tokenOut,
