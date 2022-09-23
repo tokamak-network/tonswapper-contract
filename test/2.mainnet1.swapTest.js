@@ -78,9 +78,13 @@ let lyda;
 let dai;
 
 let minimumAmount;
+let maxmumInputAmount;
 
 const tokenPooluniAmount = ethers.utils.parseUnits("100000", 18);
 const wtonPooluniAmount = ethers.utils.parseUnits("100000", 27);
+
+let bigNumber100 = BigNumber.from("100")
+let bigNumber95 = BigNumber.from("95")
 
 const oneETH = ethers.utils.parseUnits("1", 18);
 const oneWTON = ethers.utils.parseUnits("1", 27);
@@ -111,13 +115,13 @@ let hexlydaAddress = "E1B0630D7649CdF503eABc2b6423227Be9605247";
 let hextosAddress = "409c4D8cd5d2924b9bc5509230d16a61289c8153";
 let hexauraAddress = "aEC59E5b4f8DbF513e260500eA96EbA173F74149";
 
-const calculMinimumAmount  = async (address) => {
-    let tx2 = await tonSwapper.callStatic.quoterTest(address);
-    let bigNumber2100 = BigNumber.from("100")
-    let bigNumber295 = BigNumber.from("95")
-    let minimumAmount2 = tx2.mul(bigNumber295).div(bigNumber2100);
-    return minimumAmount2;
-}
+// const calculMinimumAmount  = async (address) => {
+//     let tx2 = await tonSwapper.callStatic.quoterTest(address);
+//     let bigNumber2100 = BigNumber.from("100")
+//     let bigNumber295 = BigNumber.from("95")
+//     let minimumAmount2 = tx2.mul(bigNumber295).div(bigNumber2100);
+//     return minimumAmount2;
+// }
 
 describe("swap", function () {
 
@@ -221,32 +225,23 @@ describe("swap", function () {
     })
 
     describe("#3. quoter test", async () => {
-        it("quoter test", async () => {
-            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            let tx = await tonSwapper.connect(admin).quoterTest(weth.address);
-            await tx.wait();
-        })
-
-        it("quoter test2", async () => {
-            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            let tx = await tonSwapper.connect(admin).quoterTest2(weth.address);
-            await tx.wait();
-        })
-
-        it("quoter test3 callstatic", async () => {
-            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            let tx = await tonSwapper.callStatic.quoterTest(weth.address);
+        it("quoter test callstatic", async () => {
+            let tx = await tonSwapper.callStatic.tokenABQuoter(
+                wton.address,
+                weth.address,
+                3000,
+                oneWTON
+            )
             console.log("tx : ", tx);
         })
 
-        it("quoter test4 callstatic", async () => {
-            // await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            let tx = await tonSwapper.callStatic.quoterTest2(weth.address);
-            console.log("tx : ", tx);
-        })
-
-        it("multiQuoter test1 callstatic(wton -> eth -> tos)", async () => {
-            let tx = await tonSwapper.callStatic.multiQuoterInputWTONAmount(weth.address,tos.address,oneWTON);
+        it("multiQuoter test1 callstatic(wton -> eth -> tos)", async () => {            
+            let tx = await tonSwapper.callStatic.multiQuoterTokenToToken(
+                wton.address,
+                weth.address,
+                tos.address,
+                oneWTON
+            )
             console.log("tosAmount : ", Number(tx));
         })
 
@@ -284,22 +279,23 @@ describe("swap", function () {
 
     describe("#4. test the tokenToTON (token to TON or WTON)", async () => {
         it("#4-1. minimumAmount WETH -> WTON", async () => {
-            let tx = await tonSwapper.callStatic.quoterTest(weth.address);
-            console.log("wtonAmount : ", Number(tx));
-            let bigNumber100 = BigNumber.from("100")
-            let bigNumber95 = BigNumber.from("95")
+            let tx = await tonSwapper.callStatic.tokenABQuoter(
+                weth.address,
+                wton.address,
+                3000,
+                oneETH
+            )
+
             minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
+
             console.log("minimumAmount : ", minimumAmount);
             console.log("minimumAmount : ", Number(minimumAmount));
 
-            minimumAmount = await calculMinimumAmount(weth.address);
-            console.log("minimumAmount2 : ", minimumAmount);
-            console.log("minimumAmount2 : ", Number(minimumAmount));
         })
 
         it("#4-2. tokenToTON (ETH -> WTON swap)", async () => {
             let beforeAmount = await wton.balanceOf(admin.address);
-            await tonSwapper.connect(admin).tokenToTON(
+            await tonSwapper.connect(admin).tokenToTon(
                 weth.address,
                 oneETH,
                 minimumAmount,
@@ -313,10 +309,17 @@ describe("swap", function () {
         })
 
         it("#4-3. tokenToTON (ETH -> TON swap)", async () => {
-            minimumAmount = await calculMinimumAmount(weth.address);
+            minimumAmount = await tonSwapper.callStatic.tokenABQuoter(
+                weth.address,
+                wton.address,
+                3000,
+                oneETH
+            )
+
+            minimumAmount = minimumAmount.mul(bigNumber95).div(bigNumber100);
             
             let beforeAmount = await ton.balanceOf(admin.address);
-            await tonSwapper.connect(admin).tokenToTON(
+            await tonSwapper.connect(admin).tokenToTon(
                 weth.address,
                 oneETH,
                 minimumAmount,
@@ -331,9 +334,14 @@ describe("swap", function () {
         })
 
         it("#4-4. don't tokenToTON before approve", async () => {
-            minimumAmount = await calculMinimumAmount(weth.address);
+            minimumAmount = await tonSwapper.callStatic.tokenABQuoter(
+                weth.address,
+                wton.address,
+                3000,
+                oneETH
+            )
 
-            tx = tonSwapper.connect(admin).tokenToTON(
+            tx = tonSwapper.connect(admin).tokenToTon(
                 weth.address,
                 oneETH,
                 minimumAmount,
@@ -345,12 +353,19 @@ describe("swap", function () {
         })
 
         it("#4-5. tokenToTON after approve (WETH -> TON swap)", async () => {
-            minimumAmount = await calculMinimumAmount(weth.address);
+            minimumAmount = await tonSwapper.callStatic.tokenABQuoter(
+                weth.address,
+                wton.address,
+                3000,
+                oneETH
+            )
+            
+            minimumAmount = minimumAmount.mul(bigNumber95).div(bigNumber100);
 
             let beforeAmount = await ton.balanceOf(admin.address);
 
             await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            await tonSwapper.connect(admin).tokenToTON(
+            await tonSwapper.connect(admin).tokenToTon(
                 weth.address,
                 oneETH,
                 minimumAmount,
@@ -367,14 +382,21 @@ describe("swap", function () {
         })
 
         it("#4-6. tokenToTON (WETH -> WTON swap)", async () => {
-            minimumAmount = await calculMinimumAmount(weth.address);
+            minimumAmount = await tonSwapper.callStatic.tokenABQuoter(
+                weth.address,
+                wton.address,
+                3000,
+                oneETH
+            )
+
+            minimumAmount = minimumAmount.mul(bigNumber95).div(bigNumber100);
 
             await weth.connect(admin).deposit({value: oneETH});
 
             let beforeAmount = await wton.balanceOf(admin.address);
 
             await weth.connect(admin).approve(tonSwapper.address, oneETH);
-            await tonSwapper.connect(admin).tokenToTON(
+            await tonSwapper.connect(admin).tokenToTon(
                 weth.address,
                 oneETH,
                 minimumAmount,
@@ -389,10 +411,13 @@ describe("swap", function () {
 
     describe("#5. test the tonToToken (TON or WTON to token)", async () => {
         it("#5-1. minimumAmount TON-> TOS", async () => {
-            let tx = await tonSwapper.callStatic.quoterTest2(tos.address);
-            console.log("tosAmount : ", Number(tx));
-            let bigNumber100 = BigNumber.from("100")
-            let bigNumber95 = BigNumber.from("95")
+            let tx = await tonSwapper.callStatic.tokenABQuoter(
+                wton.address,
+                tos.address,
+                3000,
+                oneWTON
+            )
+
             minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
             console.log("minimumAmount : ", minimumAmount);
             console.log("minimumAmount : ", Number(minimumAmount));
@@ -430,10 +455,13 @@ describe("swap", function () {
         })
 
         it("#5-4. tonToToken after approve (WTON -> TOS swap)", async () => {
-            let tx = await tonSwapper.callStatic.quoterTest2(tos.address);
-            console.log("tosAmount : ", Number(tx));
-            let bigNumber100 = BigNumber.from("100")
-            let bigNumber95 = BigNumber.from("95")
+            let tx = await tonSwapper.callStatic.tokenABQuoter(
+                wton.address,
+                tos.address,
+                3000,
+                oneWTON
+            )
+
             minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
 
             let beforeAmount = await tos.balanceOf(admin.address);
@@ -455,12 +483,19 @@ describe("swap", function () {
         })
 
         it("#5-5. tokenToTON (TOS -> TON swap)", async () => {
-            minimumAmount = await calculMinimumAmount(tos.address);
+            minimumAmount = await tonSwapper.callStatic.tokenABQuoter(
+                tos.address,
+                wton.address,
+                3000,
+                oneETH
+            )
+
+            minimumAmount = minimumAmount.mul(bigNumber95).div(bigNumber100);
 
             let beforeAmount = await ton.balanceOf(admin.address);
 
             await tos.connect(admin).approve(tonSwapper.address, oneETH);
-            await tonSwapper.connect(admin).tokenToTON(
+            await tonSwapper.connect(admin).tokenToTon(
                 tos.address,
                 oneETH,
                 minimumAmount,
@@ -474,12 +509,19 @@ describe("swap", function () {
         })
 
         it("#5-6. tokenToTON (TOS -> WTON swap)", async () => {
-            minimumAmount = await calculMinimumAmount(tos.address);
+            minimumAmount = await tonSwapper.callStatic.tokenABQuoter(
+                tos.address,
+                wton.address,
+                3000,
+                oneETH
+            )
+
+            minimumAmount = minimumAmount.mul(bigNumber95).div(bigNumber100);
 
             let beforeAmount = await wton.balanceOf(admin.address);
 
             await tos.connect(admin).approve(tonSwapper.address, oneETH);
-            await tonSwapper.connect(admin).tokenToTON(
+            await tonSwapper.connect(admin).tokenToTon(
                 tos.address,
                 oneETH,
                 minimumAmount,
@@ -492,10 +534,13 @@ describe("swap", function () {
         })
 
         it("5-7. tonToToken approveAndCall (TON -> TOS swap)", async () => {
-            let tx = await tonSwapper.callStatic.quoterTest2(tos.address);
-            console.log("minimum tosAmount : ", Number(tx));
-            let bigNumber100 = BigNumber.from("100")
-            let bigNumber95 = BigNumber.from("95")
+            let tx = await tonSwapper.callStatic.tokenABQuoter(
+                wton.address,
+                tos.address,
+                3000,
+                oneWTON
+            )
+
             minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
             console.log("minimumAmount : ", minimumAmount);
             console.log("minimumAmount : ", Number(minimumAmount));
@@ -528,10 +573,13 @@ describe("swap", function () {
         })
 
         it("5-8. tonToToken approveAndCall (WTON -> TOS swap)", async () => {
-            let tx = await tonSwapper.callStatic.quoterTest2(tos.address);
-            console.log("minimum tosAmount : ", Number(tx));
-            let bigNumber100 = BigNumber.from("100")
-            let bigNumber95 = BigNumber.from("95")
+            let tx = await tonSwapper.callStatic.tokenABQuoter(
+                wton.address,
+                tos.address,
+                3000,
+                oneWTON
+            )
+
             minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
             console.log("minimumAmount : ", minimumAmount);
             console.log("minimumAmount : ", Number(minimumAmount));
@@ -629,8 +677,15 @@ describe("swap", function () {
 
     describe("#7. ton To Token multiSwap (tonToTokenMulti)", async () => {
         it("#7-1. calculate the minimumAmount for Get AURA", async () => {
-            let tx = await tonSwapper.callStatic.multiQuoterInputTONAmount(tos.address,auraAddress,oneETH);
-            console.log("auraAmount : ", Number(tx));
+            // let tx = await tonSwapper.callStatic.multiQuoterInputTONAmount(tos.address,auraAddress,oneETH);
+            // console.log("auraAmount : ", Number(tx));
+
+            let tx = await tonSwapper.callStatic.multiQuoterTokenToToken(
+                wton.address,
+                tos.address,
+                auraAddress,
+                oneWTON
+            )
             let bigNumber100 = BigNumber.from("100")
             let bigNumber95 = BigNumber.from("95")
             minimumAmount = tx.mul(bigNumber95).div(bigNumber100);
@@ -689,7 +744,14 @@ describe("swap", function () {
         })
 
         it("#7-5. approveAndCall swap the TON -> WTON -> TOS -> AURA", async () => {
-            let tx = await tonSwapper.callStatic.multiQuoterInputTONAmount(tos.address,auraAddress,oneETH);
+            // let tx = await tonSwapper.callStatic.multiQuoterInputTONAmount(tos.address,auraAddress,oneETH);
+
+            let tx = await tonSwapper.callStatic.multiQuoterTokenToToken(
+                wton.address,
+                tos.address,
+                auraAddress,
+                oneWTON
+            )
             // console.log("auraAmount : ", Number(tx));
             let bigNumber100 = BigNumber.from("100")
             let bigNumber95 = BigNumber.from("95")
@@ -929,6 +991,66 @@ describe("swap", function () {
             console.log("afterDAIamount : ", Number(afterDAIamount));
             let result = Number(afterDAIamount)-Number(beforeDAIamount);
             console.log("result : ", Number(result));
+        })
+    })
+
+    describe("#11. tonToTokenExactOutput test", async () => {
+        it("#11-1. exactOutputQuoter test (WTON -> token)", async () => {
+            let tx = await tonSwapper.callStatic.exactOutputQuoter(
+                wton.address,
+                tos.address,
+                3000,
+                oneETH
+            )
+
+            console.log("wtonAmount : ", Number(tx));
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber105 = BigNumber.from("105")
+            maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+            // console.log("maxmumInputAmount : ", maxmumInputAmount);
+            console.log("maxmumInputAmount : ", Number(maxmumInputAmount));
+        })
+
+        it("#11-2. tonToTokenExactOutput (WTON -> TOS)", async () => {
+            let beforeTOSAmount = await tos.balanceOf(admin.address)
+            let beforeWTONAmount = await wton.balanceOf(admin.address)
+            console.log("beforeWTONAmount : ",beforeWTONAmount);
+
+            await wton.connect(admin).approve(tonSwapper.address,maxmumInputAmount);
+            await tonSwapper.connect(admin).tonToTokenExactOutput(
+                admin.address,
+                tos.address,
+                oneETH,
+                maxmumInputAmount,
+                true
+            )
+            let afterTOSAmount = await tos.balanceOf(admin.address)
+            let afterWTONAmount = await wton.balanceOf(admin.address)
+            console.log("afterWTONAmount : ",afterWTONAmount);
+
+            let resultTOS = Number(afterTOSAmount)-Number(beforeTOSAmount);
+            let resultWTON = Number(beforeWTONAmount)-Number(afterWTONAmount);
+            console.log("resultWTON : ",resultWTON);
+            expect(Number(resultTOS)).to.be.equal(oneETH);
+            expect(Number(maxmumInputAmount)).to.be.gte(Number(resultWTON));
+        })
+    })
+
+    describe("#12. tokenToTonExactOutput test", async () => {
+        it("exactOutputQuoter test (TOS(token) -> wton)", async () => {
+            let tx = await tonSwapper.callStatic.exactOutputQuoter(
+                tos.address,
+                wton.address,
+                3000,
+                oneETH
+            )
+
+            console.log("wtonAmount : ", Number(tx));
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber105 = BigNumber.from("105")
+            let maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+            console.log("maxmumInputAmount : ", maxmumInputAmount);
+            console.log("maxmumInputAmount : ", Number(maxmumInputAmount));
         })
     })
 });

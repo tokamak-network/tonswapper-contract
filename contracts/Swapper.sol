@@ -83,125 +83,6 @@ contract Swapper is
         return true;
     }
 
-    function _decodeApproveData(
-        bytes calldata data
-    ) internal view returns (address approveData,address selector,address getTokenAddress) {
-        // require(data.length == 0x60);
-        console.log(data.length);
-        bytes memory data1 = data[20:40];
-        bytes memory data2 = data[0:20];
-        bytes memory data3 = data[40:60];
-        console.log(data1.length);
-        console.log(data2.length);
-        assembly {
-            approveData := mload(add(data1, 0x14))
-            selector := mload(add(data2, 0x14))
-            getTokenAddress := mload(add(data3, 0x14))
-        }
-    }
-
-    function _decodeAddress(
-        address a
-    ) internal pure returns (uint256){
-        return uint256(uint160(a));
-    }
-
-    // 1 Token -> ? WTON
-    function quoterTest(
-        address _token
-    )
-        public 
-        returns (uint256)
-    {
-        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
-            _token,
-            wton,
-            3000,
-            1e18,
-            0
-        );
-        console.log("amountOut1 : %s", amountOut1);
-        return amountOut1;
-    }
-
-    // 1 WTON -> ? Token
-    function quoterTest2(
-        address _token
-    ) 
-        public 
-        returns (uint256)
-    {
-        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
-            wton,
-            _token,
-            3000,
-            1e27,
-            0
-        );
-        console.log("amountOut2 : %s", amountOut2);
-        return amountOut2;
-    }
-
-    //WTON -> A -> B
-    function multiQuoterInputWTONAmount(
-        address _secondToken,
-        address _thirdToken,
-        uint256 inputAmount
-    )
-        public
-        returns (uint256)
-    {
-        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
-            wton,
-            _secondToken,
-            3000,
-            inputAmount,
-            0
-        );
-        console.log("amountOut1 : %s", amountOut1);
-
-        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
-            _secondToken,
-            _thirdToken,
-            3000,
-            amountOut1,
-            0
-        );
-        console.log("amountOut2 : %s", amountOut2);
-        return amountOut2;
-    }
-
-    //TON -> WTON -> A -> B
-    function multiQuoterInputTONAmount(
-        address _secondToken,
-        address _thirdToken,
-        uint256 inputAmount
-    )
-        public
-        returns (uint256)
-    {   
-        uint256 wTonSwapAmount = _toRAY(inputAmount);
-
-        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
-            wton,
-            _secondToken,
-            3000,
-            wTonSwapAmount,
-            0
-        );
-        console.log("amountOut1 : %s", amountOut1);
-
-        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
-            _secondToken,
-            _thirdToken,
-            3000,
-            amountOut1,
-            0
-        );
-        console.log("amountOut2 : %s", amountOut2);
-        return amountOut2;
-    }
-
 
     //token -> TOS -> WTON
     function multiQuoterInputTokenAmount(
@@ -275,16 +156,59 @@ contract Swapper is
         uint256 _inputAmount
     )
         public
-        returns (uint256)
+        returns (uint256 amountOut)
     {
-        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+        amountOut = v3Quoter.quoteExactInputSingle(
             _inputToken,
             _outputToken,
             _fee,
             _inputAmount,
             0
         );
-        return amountOut1;
+    }
+
+    function exactOutputQuoter(
+        address _inputToken,
+        address _outputToken,
+        uint24 _fee,
+        uint256 _exactOutputAmount
+    )
+        public
+        returns (uint256 amountIn)
+    {
+        amountIn = v3Quoter.quoteExactOutputSingle(
+            _inputToken,
+            _outputToken,
+            _fee,
+            _exactOutputAmount,
+            0
+        );
+    }
+
+    function multiExactOutputQuoter(
+        address _inputToken,
+        address _outputToken,
+        uint24 _fee,
+        uint256 _exactOutputAmount
+    )
+        public
+        returns (uint256 amountIn)
+    {
+        amountIn = v3Quoter.quoteExactOutputSingle(
+            _inputToken,
+            tos,
+            _fee,
+            _exactOutputAmount,
+            0
+        );
+
+        amountIn = v3Quoter.quoteExactOutputSingle(
+            tos,
+            _outputToken,
+            _fee,
+            amountIn,
+            0
+        );
     }
 
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
@@ -342,6 +266,52 @@ contract Swapper is
         uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
     }
 
+    // TON -> WTON -> Token
+    // ?의 TON or wton을 넣어서 (남은 금액은 wton으로 돌려줌)
+    function tonToTokenExactOutput(
+        address _recipient,
+        address _address,
+        uint256 _amountOut,
+        uint256 _amountInMaximum,
+        bool _checkWTON
+    )
+        public
+        returns (uint256 amountIn)
+    {
+        uint256 wTonSwapAmount;
+        if(_checkWTON){
+            //WTONamount를 바로 받아서 보냄
+            wTonSwapAmount = _amountInMaximum;
+            IERC20(wton).safeTransferFrom(_recipient,address(this), wTonSwapAmount);
+        } else {
+            //TONamount를 받아서 보냄
+            wTonSwapAmount = _toRAY(_amountInMaximum);
+            needapprove(_amountInMaximum);
+            IERC20(ton).safeTransferFrom(_recipient,address(this), _amountInMaximum);
+            //ton -> wton으로 변경
+            IWTON(wton).swapFromTON(_amountInMaximum);
+        }
+
+        IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
+
+        ISwapRouter.ExactOutputParams memory params =
+            ISwapRouter.ExactOutputParams({
+                // Path is reversed
+                path: abi.encodePacked(_address, poolFee, wton),
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountInMaximum: wTonSwapAmount,
+                amountOut: _amountOut
+            });
+
+        amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
+        
+        if (amountIn < wTonSwapAmount) {
+            IERC20(wton).approve(_recipient,_amountInMaximum - amountIn);
+            IERC20(wton).safeTransferFrom(address(this), _recipient, _amountInMaximum - amountIn);
+        }
+    }
+
     // 4. token -> TON (TOS -> WTON -> TON)
     // 유저는 컨트랙트에 approve
     // 컨트랙트는 token을 uniswapRouter에 approve 해주어야함
@@ -350,7 +320,7 @@ contract Swapper is
     // _minimumAmount : 최소로 받을 wton양
     // _checkWTON : 최종 받는 토큰을 TON으로 받을 것인지 WTON으로 받을 것인지? (true = wton으로 받음, false = ton으로 받음)
     // _wrapEth : eth로 입금할때 체크 (eth로 가능하게함) (eth로 입금할 경우 true, 그외의 토큰 false)
-    function tokenToTON(
+    function tokenToTon(
         address _address,
         uint256 _amount,
         uint256 _minimumAmount,
@@ -390,6 +360,55 @@ contract Swapper is
         } else {
             // wton -> ton 으로 변경과 동시에 transfer함
             IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
+        }
+    }
+
+    function tokenToTonExactOutput(
+        address _address,
+        uint256 _amountOut,
+        uint256 _amountInMaximum,
+        bool _checkWTON,
+        bool _wrapEth
+    )
+        public
+        payable
+        returns (uint256 amountIn)
+    {
+        if (_wrapEth) {
+            require(msg.value == _amountInMaximum, "wrong msg.value");
+            require(_address == address(_WETH), "need the wethAddress");
+            _WETH.deposit{value: _amountInMaximum}();
+        } else {
+            require(msg.value == 0, "msg.value should be 0");
+            //token을 받음
+            IERC20(_address).safeTransferFrom(msg.sender,address(this), _amountInMaximum);
+        }
+        //token을 wton으로 변경하기 위한 사전 허락
+        IERC20(_address).approve(address(uniswapRouter),_amountInMaximum);
+
+         ISwapRouter.ExactOutputParams memory params =
+            ISwapRouter.ExactOutputParams({
+                // Path is reversed
+                path: abi.encodePacked(wton, poolFee, _address),
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountInMaximum: _amountInMaximum,
+                amountOut: _amountOut
+            });
+
+        amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
+        
+        if(_checkWTON) {
+            //wton으로 바로 보내줌
+            IWTON(wton).transfer(msg.sender,_amountOut);
+        } else {
+            // wton -> ton 으로 변경과 동시에 transfer함
+            IWTON(wton).swapToTONAndTransfer(msg.sender,_amountOut);
+        }
+
+         if (amountIn < _amountInMaximum) {
+            IERC20(wton).approve(msg.sender,_amountInMaximum - amountIn);
+            IERC20(wton).safeTransferFrom(address(this), msg.sender, _amountInMaximum - amountIn);
         }
     }
 
@@ -588,7 +607,7 @@ contract Swapper is
         uint256 _minimumAmount,
         uint24 _fee
     )
-        public
+        internal
         returns (uint256 amountOut)
     {
         IERC20(_tokenIn).approve(address(uniswapRouter),_amount);
@@ -639,6 +658,29 @@ contract Swapper is
     }
 
     /* view function */
+
+    function _decodeApproveData(
+        bytes calldata data
+    ) internal view returns (address approveData,address selector,address getTokenAddress) {
+        // require(data.length == 0x60);
+        console.log(data.length);
+        bytes memory data1 = data[20:40];
+        bytes memory data2 = data[0:20];
+        bytes memory data3 = data[40:60];
+        console.log(data1.length);
+        console.log(data2.length);
+        assembly {
+            approveData := mload(add(data1, 0x14))
+            selector := mload(add(data2, 0x14))
+            getTokenAddress := mload(add(data3, 0x14))
+        }
+    }
+
+    function _decodeAddress(
+        address a
+    ) internal pure returns (uint256){
+        return uint256(uint160(a));
+    }
     
     //@dev transform WAD to RAY
     function _toRAY(uint256 v) internal pure returns (uint256) {
