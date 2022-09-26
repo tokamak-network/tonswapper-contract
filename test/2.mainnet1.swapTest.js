@@ -146,6 +146,11 @@ describe("swap", function () {
             "0x8ac7230489e80000",
         ]);
 
+        await hre.ethers.provider.send("hardhat_setBalance", [
+            account1.address,
+            "0x8ac7230489e80000",
+        ]);
+
         // let balanceETH = await ethers.provider.getBalance(admin.address);
         // console.log("balanceETH : ", Number(balanceETH));
     }); 
@@ -1014,7 +1019,9 @@ describe("swap", function () {
         it("#11-2. tonToTokenExactOutput (WTON -> TOS)", async () => {
             let beforeTOSAmount = await tos.balanceOf(admin.address)
             let beforeWTONAmount = await wton.balanceOf(admin.address)
-            console.log("beforeWTONAmount : ",beforeWTONAmount);
+            console.log("beforeTOSAmount : ",Number(beforeTOSAmount));
+            console.log("beforeWTONAmount : ",Number(beforeWTONAmount));
+            console.log("maxmumInputAmount : ",Number(maxmumInputAmount));
 
             await wton.connect(admin).approve(tonSwapper.address,maxmumInputAmount);
             await tonSwapper.connect(admin).tonToTokenExactOutput(
@@ -1026,31 +1033,62 @@ describe("swap", function () {
             )
             let afterTOSAmount = await tos.balanceOf(admin.address)
             let afterWTONAmount = await wton.balanceOf(admin.address)
-            console.log("afterWTONAmount : ",afterWTONAmount);
+            console.log("afterTOSAmount : ",Number(afterTOSAmount));
+            console.log("afterWTONAmount : ",Number(afterWTONAmount));
 
             let resultTOS = Number(afterTOSAmount)-Number(beforeTOSAmount);
             let resultWTON = Number(beforeWTONAmount)-Number(afterWTONAmount);
             console.log("resultWTON : ",resultWTON);
-            expect(Number(resultTOS)).to.be.equal(oneETH);
-            expect(Number(maxmumInputAmount)).to.be.gte(Number(resultWTON));
+            console.log("resultTOS : ",resultTOS);
+            expect(resultTOS).to.be.equal(Number(oneETH));
+            expect(Number(maxmumInputAmount)).to.be.above(Number(resultWTON));
         })
     })
 
     describe("#12. tokenToTonExactOutput test", async () => {
-        it("exactOutputQuoter test (TOS(token) -> wton)", async () => {
+        it("#12-1. exactOutputQuoter test (TOS(token) -> wton)", async () => {
             let tx = await tonSwapper.callStatic.exactOutputQuoter(
                 tos.address,
                 wton.address,
                 3000,
-                oneETH
+                oneWTON
             )
 
             console.log("wtonAmount : ", Number(tx));
             let bigNumber100 = BigNumber.from("100")
             let bigNumber105 = BigNumber.from("105")
-            let maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+            maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
             console.log("maxmumInputAmount : ", maxmumInputAmount);
             console.log("maxmumInputAmount : ", Number(maxmumInputAmount));
+        })
+
+        it("#12-2. tokenToTonExactOutput (TOS -> WTON)", async() => {
+            await tos.connect(admin).transfer(account1.address,maxmumInputAmount);
+            let beforeTOSAmount = await tos.balanceOf(account1.address)
+            let beforeWTONAmount = await wton.balanceOf(account1.address)
+            console.log("beforeTOSAmount : ",Number(beforeTOSAmount));
+            console.log("beforeWTONAmount : ",Number(beforeWTONAmount));
+            console.log("maxmumInputAmount : ",Number(maxmumInputAmount));
+
+            await tos.connect(account1).approve(tonSwapper.address,maxmumInputAmount);
+            await tonSwapper.connect(account1).tokenToTonExactOutput(
+                tos.address,
+                oneWTON,
+                maxmumInputAmount,
+                true,
+                false
+            )
+            let afterTOSAmount = await tos.balanceOf(account1.address)
+            let afterWTONAmount = await wton.balanceOf(account1.address)
+            console.log("afterTOSAmount : ",Number(afterTOSAmount));
+            console.log("afterWTONAmount : ",Number(afterWTONAmount));
+
+            let resultTOS = Number(beforeTOSAmount)-Number(afterTOSAmount);
+            let resultWTON = Number(afterWTONAmount)-Number(beforeWTONAmount);
+            console.log("resultWTON : ",resultWTON);
+            console.log("resultTOS : ",resultTOS);
+            expect(resultWTON).to.be.equal(Number(oneWTON));
+            expect(Number(maxmumInputAmount)).to.be.above(Number(resultTOS));
         })
     })
 });

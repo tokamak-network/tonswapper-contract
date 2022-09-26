@@ -46,37 +46,25 @@ contract Swapper is
         bytes calldata data
     ) external override returns (bool) {
 
-        console.log("Check Point#1");
         (address minimumAmount, address selector, address getTokenAddress)= _decodeApproveData(data);
-        console.log("minimumAmount : %s",minimumAmount);
-        console.log("selector : %s",selector);
-        console.log("getTokenAddress : %s",getTokenAddress);
         uint256 minimumAmount1 = _decodeAddress(minimumAmount);
         uint256 selector1 = _decodeAddress(selector);
-        console.log("minimumAmount1 : %s",minimumAmount1);
-        console.log("selector1 : %s",selector1);
 
         // swap owner's TON to WTON
         if (msg.sender == address(ton)) {
             if(selector1 == 1){
-                console.log("selector = 1, ton ApproveAndCall");
                 tonToToken(sender,getTokenAddress,transferAmount,minimumAmount1,false);
             } else if (selector1 == 2) {
-                console.log("selector = 2, ton ApproveAndCall");
                 tonToTokenMulti(sender,getTokenAddress,transferAmount,minimumAmount1,false);
             } else {
-                console.log("ton no selectorData");
                 _tonToWTON(sender,transferAmount);
             }
         } else if (msg.sender == address(wton)) {
             if(selector1 == 1){
-                console.log("selector = 1, wton ApproveAndCall");
                 tonToToken(sender,getTokenAddress,transferAmount,minimumAmount1,true);
             } else if (selector1 == 2) {
-                console.log("selector = 2");
                 tonToTokenMulti(sender,getTokenAddress,transferAmount,minimumAmount1,true);
             } else {
-                 console.log("wton no selectorData");
                 _wtonToTON(sender,transferAmount);
             }
         }
@@ -183,6 +171,12 @@ contract Swapper is
             _exactOutputAmount,
             0
         );
+
+        // if(IIERC20(_inputToken).decimals() < IIERC20(_outputToken).decimals()){
+        //     uint256 decimals = IIERC20(_outputToken).decimals() - IIERC20(_inputToken).decimals();
+        //     console.log("decimals : %s", decimals);
+        //     amountIn = amountIn * (10 ** decimals);
+        // }
     }
 
     function multiExactOutputQuoter(
@@ -293,22 +287,24 @@ contract Swapper is
         }
 
         IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
-
         ISwapRouter.ExactOutputParams memory params =
             ISwapRouter.ExactOutputParams({
                 // Path is reversed
                 path: abi.encodePacked(_address, poolFee, wton),
-                recipient: address(this),
+                recipient: _recipient,
                 deadline: block.timestamp,
                 amountInMaximum: wTonSwapAmount,
                 amountOut: _amountOut
             });
 
         amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
-        
+
         if (amountIn < wTonSwapAmount) {
-            IERC20(wton).approve(_recipient,_amountInMaximum - amountIn);
-            IERC20(wton).safeTransferFrom(address(this), _recipient, _amountInMaximum - amountIn);
+            console.log("wTonSwapAmount : %s",wTonSwapAmount);
+            console.log("amountIn : %s",amountIn);
+            console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);            
+            IERC20(wton).transfer(_recipient, wTonSwapAmount - amountIn);
+            // IERC20(wton).safeTransferFrom(address(this), _recipient, wTonSwapAmount - amountIn);
         }
     }
 
@@ -381,8 +377,11 @@ contract Swapper is
         } else {
             require(msg.value == 0, "msg.value should be 0");
             //token을 받음
+            console.log("1");
+            console.log("_amountInMaximum : %s",_amountInMaximum);
             IERC20(_address).safeTransferFrom(msg.sender,address(this), _amountInMaximum);
         }
+        console.log("2");
         //token을 wton으로 변경하기 위한 사전 허락
         IERC20(_address).approve(address(uniswapRouter),_amountInMaximum);
 
@@ -395,8 +394,9 @@ contract Swapper is
                 amountInMaximum: _amountInMaximum,
                 amountOut: _amountOut
             });
-
+        console.log("3");
         amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
+        console.log("amountIn : %s", amountIn);
         
         if(_checkWTON) {
             //wton으로 바로 보내줌
@@ -407,8 +407,8 @@ contract Swapper is
         }
 
          if (amountIn < _amountInMaximum) {
-            IERC20(wton).approve(msg.sender,_amountInMaximum - amountIn);
-            IERC20(wton).safeTransferFrom(address(this), msg.sender, _amountInMaximum - amountIn);
+            console.log("_amountInMaximum - amountIn : %s",_amountInMaximum - amountIn);
+            IERC20(_address).transfer(msg.sender, _amountInMaximum - amountIn);
         }
     }
 
