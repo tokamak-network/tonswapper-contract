@@ -430,7 +430,6 @@ describe("swap", function () {
 
         it("#5-2. don't tonToToken before approve", async () => {
             let tx = tonSwapper.connect(admin).tonToToken(
-                admin.address,
                 tos.address,
                 oneETH,
                 minimumAmount,
@@ -447,7 +446,6 @@ describe("swap", function () {
 
             await ton.connect(admin).approve(tonSwapper.address,oneETH);
             await tonSwapper.connect(admin).tonToToken(
-                admin.address,
                 tos.address,
                 oneETH,
                 minimumAmount,
@@ -473,7 +471,6 @@ describe("swap", function () {
 
             await wton.connect(admin).approve(tonSwapper.address,oneWTON);
             await tonSwapper.connect(admin).tonToToken(
-                admin.address,
                 tos.address,
                 oneWTON,
                 minimumAmount,
@@ -703,7 +700,6 @@ describe("swap", function () {
             console.log("beforeAURAamount : ", Number(beforeAURAamount));
             await ton.connect(admin).approve(tonSwapper.address,oneETH);
             await tonSwapper.connect(admin).tonToTokenMulti(
-                admin.address,
                 auraAddress,
                 oneETH,
                 minimumAmount,
@@ -736,7 +732,6 @@ describe("swap", function () {
             console.log("beforeAURAamount : ", Number(beforeAURAamount));
             await wton.connect(admin).approve(tonSwapper.address,oneWTON);
             await tonSwapper.connect(admin).tonToTokenMulti(
-                admin.address,
                 auraAddress,
                 oneWTON,
                 minimumAmount,
@@ -1025,7 +1020,6 @@ describe("swap", function () {
 
             await wton.connect(admin).approve(tonSwapper.address,maxmumInputAmount);
             await tonSwapper.connect(admin).tonToTokenExactOutput(
-                admin.address,
                 tos.address,
                 oneETH,
                 maxmumInputAmount,
