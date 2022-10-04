@@ -202,8 +202,6 @@ contract Swapper is
     // 2. wton to ton (this function execute before need the WTON approve -> this address)
     function wtonToTON(uint256 _amount) public {
         _wtonToTON(msg.sender,_amount);
-        // IERC20(wton).safeTransferFrom(msg.sender,address(this),_amount);
-        // IWTON(wton).swapToTONAndTransfer(msg.sender,_amount);
     }
 
     // 3. ton to token (TON -> WTON -> TOS)
@@ -260,22 +258,8 @@ contract Swapper is
             _WETH.deposit{value: _amount}();
         } else {
             require(msg.value == 0, "msg.value should be 0");
-            //token을 받음
             IERC20(_address).safeTransferFrom(msg.sender,address(this), _amount);
         }
-        // IERC20(_address).approve(address(uniswapRouter),_amount);
-        
-        // ISwapRouter.ExactInputParams memory params =
-        //     ISwapRouter.ExactInputParams({
-        //         path: abi.encodePacked(_address, poolFee, wton),
-        //         recipient: address(this),
-        //         deadline: block.timestamp,
-        //         amountIn: _amount,
-        //         amountOutMinimum: _minimumAmount
-        //     });
-
-        // // token -> wton 변경
-        // uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
         
         uint256 amountOut = _arraySwapInput(
             address(this),
@@ -295,6 +279,7 @@ contract Swapper is
         }
     }
 
+    // token -> TON (정확한 output)
     function tokenToTonExactOutput(
         address _address,
         uint256 _amountOut,
@@ -312,38 +297,17 @@ contract Swapper is
             _WETH.deposit{value: _amountInMaximum}();
         } else {
             require(msg.value == 0, "msg.value should be 0");
-            //token을 받음
-            console.log("_amountInMaximum : %s",_amountInMaximum);
             IERC20(_address).safeTransferFrom(msg.sender,address(this), _amountInMaximum);
         }
 
-        //token을 wton으로 변경하기 위한 사전 허락
-
-        IERC20(_address).approve(address(uniswapRouter),_amountInMaximum);
-
-         ISwapRouter.ExactOutputParams memory params =
-            ISwapRouter.ExactOutputParams({
-                // Path is reversed
-                path: abi.encodePacked(wton, poolFee, _address),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountInMaximum: _amountInMaximum,
-                amountOut: _amountOut
-            });
-        console.log("3");
-        amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
-        console.log("amountIn : %s", amountIn);
-
-
-        // amountIn = _arraySwapOutput(
-        //     address(this),
-        //     _address,
-        //     wton,
-        //     _amountOut,
-        //     _amountInMaximum,
-        //     poolFee
-        // );
-
+        amountIn = _arraySwapOutput(
+            address(this),
+            _address,
+            wton,
+            _amountOut,
+            _amountInMaximum,
+            poolFee
+        );
         
         if(_checkWTON) {
             //wton으로 바로 보내줌
@@ -395,17 +359,14 @@ contract Swapper is
     {
         IERC20(_projectToken).safeTransferFrom(msg.sender,address(this), _amount);
 
-        IERC20(_projectToken).approve(address(uniswapRouter),_amount);
-        ISwapRouter.ExactInputParams memory params =
-            ISwapRouter.ExactInputParams({
-                path: abi.encodePacked(_projectToken, poolFee, tos, poolFee, wton),
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: _amount,
-                amountOutMinimum: _minimumAmount
-            });
-        uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
-        console.log("amountOut : %s", amountOut);
+        uint256 amountOut = _arraySwapHopInput(
+            address(this),
+            _projectToken,
+            tos,
+            wton,
+            _amount,
+            _minimumAmount
+        );
 
         if(_checkWTON) {
             //wton으로 바로 보내줌
@@ -439,17 +400,14 @@ contract Swapper is
             IERC20(_inputaddr).safeTransferFrom(msg.sender,address(this), _amount);
         }
 
-        IERC20(_inputaddr).approve(address(uniswapRouter),_amount);
-
-        ISwapRouter.ExactInputParams memory params =
-            ISwapRouter.ExactInputParams({
-                path: abi.encodePacked(_inputaddr, poolFee, tos, poolFee, _outputaddr),
-                recipient: msg.sender,
-                deadline: block.timestamp,
-                amountIn: _amount,
-                amountOutMinimum: _minimumAmount
-            });
-        uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+        uint256 amountOut = _arraySwapHopInput(
+            msg.sender,
+            _inputaddr,
+            tos,
+            _outputaddr,
+            _amount,
+            _minimumAmount
+        );
         console.log("amountOut : %s", amountOut);
     }
 
@@ -529,24 +487,12 @@ contract Swapper is
         } else {
             //TONamount를 받아서 보냄
             wTonSwapAmount = _toRAY(_amount);
-            needapprove(_amount);
+            _needapprove(_amount);
             IERC20(ton).safeTransferFrom(_recipient,address(this), _amount);
             //ton -> wton으로 변경
             IWTON(wton).swapFromTON(_amount);
         }
 
-        // IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
-    
-        // ISwapRouter.ExactInputParams memory params =
-        //     ISwapRouter.ExactInputParams({
-        //         path: abi.encodePacked(wton, poolFee, _address),
-        //         recipient: _recipient,
-        //         deadline: block.timestamp,
-        //         amountIn: wTonSwapAmount,
-        //         amountOutMinimum: _minimumAmount
-        //     });
-        // // wton -> token 변경
-        // uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
         uint256 amountOut = _arraySwapInput(
             _recipient,
             wton,
@@ -574,23 +520,20 @@ contract Swapper is
         } else {
             //TONamount를 받아서 보냄
             wTonSwapAmount = _toRAY(_amount);
-            needapprove(_amount);
+            _needapprove(_amount);
             IERC20(ton).safeTransferFrom(_recipient,address(this), _amount);
             //ton -> wton으로 변경
             IWTON(wton).swapFromTON(_amount);
         }
 
-        IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
-
-        ISwapRouter.ExactInputParams memory params =
-            ISwapRouter.ExactInputParams({
-                path: abi.encodePacked(wton, poolFee, tos, poolFee, _projectToken),
-                recipient: _recipient,
-                deadline: block.timestamp,
-                amountIn: wTonSwapAmount,
-                amountOutMinimum: _minimumAmount
-            });
-        uint256 amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+        uint256 amountOut = _arraySwapHopInput(
+            _recipient,
+            wton,
+            tos,
+            _projectToken,
+            wTonSwapAmount,
+            _minimumAmount
+        );
         console.log("amountOut : %s", amountOut);
         // IERC20(_projectToken).safeTransfer(msg.sender, amountOut);
     }
@@ -612,33 +555,12 @@ contract Swapper is
         } else {
             //TONamount를 받아서 보냄
             wTonSwapAmount = _toRAY(_amountInMaximum);
-            needapprove(_amountInMaximum);
+            _needapprove(_amountInMaximum);
             IERC20(ton).safeTransferFrom(_recipient,address(this), _amountInMaximum);
             //ton -> wton으로 변경
             IWTON(wton).swapFromTON(_amountInMaximum);
         }
 
-        // IERC20(wton).approve(address(uniswapRouter),wTonSwapAmount);
-        // ISwapRouter.ExactOutputParams memory params =
-        //     ISwapRouter.ExactOutputParams({
-        //         // Path is reversed
-        //         path: abi.encodePacked(_address, poolFee, wton),
-        //         recipient: _recipient,
-        //         deadline: block.timestamp,
-        //         amountInMaximum: wTonSwapAmount,
-        //         amountOut: _amountOut
-        //     });
-
-        // uint256 amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
-
-        // if (amountIn < wTonSwapAmount) {
-        //     console.log("wTonSwapAmount : %s",wTonSwapAmount);
-        //     console.log("amountIn : %s",amountIn);
-        //     console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);            
-        //     IERC20(wton).transfer(_recipient, wTonSwapAmount - amountIn);
-        //     // IERC20(wton).safeTransferFrom(address(this), _recipient, wTonSwapAmount - amountIn);
-        // }
-        
         uint256 amountIn = _arraySwapOutput(
             _recipient,
             wton,
@@ -705,13 +627,35 @@ contract Swapper is
                 amountInMaximum: _amountInMaximum,
                 amountOut: _amountOut
             });
-
         
         amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
     }
 
+    function _arraySwapHopInput(
+        address _recipient,
+        address _inputAddress,
+        address _middleAddress,
+        address _outputAddress,
+        uint256 _amountIn,
+        uint256 _minimumAmount
+    )
+        internal
+        returns (uint256 amountOut)
+    {
+        IERC20(_inputAddress).approve(address(uniswapRouter),_amountIn);
+        ISwapRouter.ExactInputParams memory params =
+            ISwapRouter.ExactInputParams({
+                path: abi.encodePacked(_inputAddress, poolFee, _middleAddress, poolFee, _outputAddress),
+                recipient: _recipient,
+                deadline: block.timestamp,
+                amountIn: _amountIn,
+                amountOutMinimum: _minimumAmount
+            });
+        amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+    }
 
-    function needapprove(
+
+    function _needapprove(
         uint256 _amount
     ) 
         internal 
@@ -725,30 +669,24 @@ contract Swapper is
     }
 
     function _tonToWTON(address _sender, uint256 _amount) internal {
-        needapprove(_amount);
-        // uint256 wTonSwapAmount = _toRAY(_amount);
+        _needapprove(_amount);
         IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
         IWTON(wton).swapFromTONAndTransfer(_sender,_amount);
-        // IWTON(wton).swapFromTON(_amount);
-        // IERC20(wton).safeTransfer(_sender,wTonSwapAmount);   
     }
 
 
     //먼저 ton을 wton으로 변경해놔야 추후 ton으로 변경가능함
     // _amount is wton uint
     function _wtonToTON(address _sender, uint256 _amount) internal {
-        // uint256 tonSwapAmount = _toWAD(_amount);
         IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
         IWTON(wton).swapToTONAndTransfer(_sender,_amount);
-        // IWTON(wton).swapToTON(_amount);
-        // IERC20(ton).safeTransfer(_sender,tonSwapAmount);   
     }
 
     /* view function */
 
     function _decodeApproveData(
         bytes calldata data
-    ) internal view returns (address approveData,address selector,address getTokenAddress) {
+    ) internal pure returns (address approveData,address selector,address getTokenAddress) {
         require(data.length == 60, "data error");
         
         bytes memory data1 = data[20:40];
