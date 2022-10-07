@@ -55,7 +55,11 @@ contract Swapper is
             if(selector1 == 1){
                 _tonToToken(sender,getTokenAddress,transferAmount,minimumAmount1,false);
             } else if (selector1 == 2) {
-                _tonToTokenMulti(sender,getTokenAddress,transferAmount,minimumAmount1,false);
+                _tonToTokenHopInput(sender,getTokenAddress,transferAmount,minimumAmount1,false);
+            } else if (selector1 == 3) {
+                _tonToTokenOutput(sender,getTokenAddress,minimumAmount1,transferAmount,false);
+            } else if (selector1 == 4) {
+                _tonToTokenHopOutput(sender,getTokenAddress,minimumAmount1,transferAmount,false);
             } else {
                 _tonToWTON(sender,transferAmount);
             }
@@ -63,7 +67,11 @@ contract Swapper is
             if(selector1 == 1){
                 _tonToToken(sender,getTokenAddress,transferAmount,minimumAmount1,true);
             } else if (selector1 == 2) {
-                _tonToTokenMulti(sender,getTokenAddress,transferAmount,minimumAmount1,true);
+                _tonToTokenHopInput(sender,getTokenAddress,transferAmount,minimumAmount1,true);
+            } else if (selector1 == 3) {
+                _tonToTokenOutput(sender,getTokenAddress,minimumAmount1,transferAmount,true);
+            } else if (selector1 == 4) {
+                _tonToTokenHopOutput(sender,getTokenAddress,minimumAmount1,transferAmount,true);
             } else {
                 _wtonToTON(sender,transferAmount);
             }
@@ -170,6 +178,7 @@ contract Swapper is
 
     function multiExactOutputQuoter(
         address _inputToken,
+        address _middleToken,
         address _outputToken,
         uint24 _fee,
         uint256 _exactOutputAmount
@@ -178,20 +187,22 @@ contract Swapper is
         returns (uint256 amountIn)
     {
         amountIn = v3Quoter.quoteExactOutputSingle(
-            _inputToken,
-            tos,
+            _middleToken,
+            _outputToken,
             _fee,
             _exactOutputAmount,
             0
         );
+        //TOS -> ARUA 로 변환할때 ARUA를 1받기 위해서 넣어야하는 TOS양
 
         amountIn = v3Quoter.quoteExactOutputSingle(
-            tos,
-            _outputToken,
+            _inputToken,
+            _middleToken,
             _fee,
             amountIn,
             0
         );
+        //WTON -> TOS로 변환시 넣어야하는 TOS양을 받기 위해서 넣어야하는 WTON양
     }
 
     // 1. ton to wton (this function need execute before  the TON approve -> this address)
@@ -331,7 +342,7 @@ contract Swapper is
     // _amount = 넣을 TON양
     // _minimumAmount = 최소로 받을 Token양
     // _checkWTON = 초기 token을 wton으로 받을 것인지? (wton -> tos -> lyda)
-    function tonToTokenMulti(
+    function tonToTokenHopInput(
         address _projectToken,
         uint256 _amount,
         uint256 _minimumAmount,
@@ -339,7 +350,7 @@ contract Swapper is
     )
         public 
     {   
-        _tonToTokenMulti(msg.sender,_projectToken,_amount,_minimumAmount,_checkWTON);
+        _tonToTokenHopInput(msg.sender,_projectToken,_amount,_minimumAmount,_checkWTON);
     }
 
     function tonToTokenHopOutput(
@@ -360,7 +371,7 @@ contract Swapper is
     // _amount = 넣을 Token 양
     // _minimumAmount = 최소로 받을 WTON 양
     // _checkWTON = 토큰을 WTON으로 받을 것인지 TON으로 받을 것인지
-    function tokenToTonMulti(
+    function tokenToTonHopInput(
         address _projectToken,
         uint256 _amount,
         uint256 _minimumAmount,
@@ -455,6 +466,42 @@ contract Swapper is
         console.log("amountOut : %s", amountOut);
     }
 
+    function tokenToTokenOutput(
+        address _inputaddr,
+        address _outputaddr,
+        uint256 _amountOut,
+        uint256 _amountInMaximum,
+        bool _wrapEth
+    )
+        public
+        payable
+    {
+        if (_wrapEth) {
+            require(msg.value == _amountInMaximum, "wrong msg.value");
+            require(_inputaddr == address(_WETH), "need the wethAddress");
+            _WETH.deposit{value: _amountInMaximum}();
+        } else {
+            require(msg.value == 0, "msg.value should be 0");
+            //token을 받음
+            IERC20(_inputaddr).safeTransferFrom(msg.sender,address(this), _amountInMaximum);
+        }
+
+        uint256 amountIn = _arraySwapHopOutput(
+            msg.sender,
+            _inputaddr,
+            tos,
+            _outputaddr,
+            _amountOut,
+            _amountInMaximum
+        );
+        console.log("amountIn : %s", amountIn);
+
+        if (amountIn < _amountInMaximum) {
+            console.log("_amountInMaximum - amountIn : %s",_amountInMaximum - amountIn);
+            IERC20(_inputaddr).transfer(msg.sender, _amountInMaximum - amountIn);
+        }
+    }
+
 
     //DAI -> ETH -> WTON 
     function tokenToTokenArray(
@@ -475,7 +522,7 @@ contract Swapper is
 
         if(len > 2) {
             IERC20(path[0]).safeTransferFrom(msg.sender,address(this), _amount);
-            minimumAmount = tokenABQuoter(path[0],path[1],fees[0],_amount)*95/100;
+            minimumAmount = tokenABQuoter(path[0],path[1],fees[0],_amount)*99/100;
             returnAmount = _arraySwapInput(
                 address(this),
                 path[0], 
@@ -585,7 +632,7 @@ contract Swapper is
         }
     }
 
-    function _tonToTokenMulti(
+    function _tonToTokenHopInput(
         address _recipient,
         address _projectToken,
         uint256 _amount,

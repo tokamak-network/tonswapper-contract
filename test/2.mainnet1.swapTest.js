@@ -250,6 +250,17 @@ describe("swap", function () {
             console.log("tosAmount : ", Number(tx));
         })
 
+        it("multiExactOutputQuoter test (WTON -> TOS -> AURA)", async () => {
+            let tx = await tonSwapper.callStatic.multiExactOutputQuoter(
+                wton.address,
+                tos.address,
+                auraAddress,
+                3000,
+                oneETH
+            )
+            console.log("need inputWTONAmount : ", Number(tx));
+        })
+
         // it("bytes test", async () => {
         //     var dec = 40000000000000000000000;
         //     var hex = dec.toString(16);
@@ -637,7 +648,7 @@ describe("swap", function () {
         it("#6-3. approveAndCall ton -> wton test", async () => {
             let beforeWTONamount = await wton.balanceOf(admin.address);
             
-            let data = 1;
+            let data = 0;
             var hex = data.toString(16);
             let length = hex.length;
             for(i= 1; i<=(120-length); i++) {
@@ -677,7 +688,7 @@ describe("swap", function () {
         })
     })
 
-    describe("#7. ton To Token multiSwap (tonToTokenMulti)", async () => {
+    describe("#7. ton To Token multiSwap (tonToTokenHopInput)", async () => {
         it("#7-1. calculate the minimumAmount for Get AURA", async () => {
             // let tx = await tonSwapper.callStatic.multiQuoterInputTONAmount(tos.address,auraAddress,oneETH);
             // console.log("auraAmount : ", Number(tx));
@@ -699,7 +710,7 @@ describe("swap", function () {
             let beforeAURAamount = await aura.balanceOf(admin.address);
             console.log("beforeAURAamount : ", Number(beforeAURAamount));
             await ton.connect(admin).approve(tonSwapper.address,oneETH);
-            await tonSwapper.connect(admin).tonToTokenMulti(
+            await tonSwapper.connect(admin).tonToTokenHopInput(
                 auraAddress,
                 oneETH,
                 minimumAmount,
@@ -731,7 +742,7 @@ describe("swap", function () {
             let beforeAURAamount = await aura.balanceOf(admin.address);
             console.log("beforeAURAamount : ", Number(beforeAURAamount));
             await wton.connect(admin).approve(tonSwapper.address,oneWTON);
-            await tonSwapper.connect(admin).tonToTokenMulti(
+            await tonSwapper.connect(admin).tonToTokenHopInput(
                 auraAddress,
                 oneWTON,
                 minimumAmount,
@@ -842,7 +853,7 @@ describe("swap", function () {
             let beforeTONamount = await ton.balanceOf(admin.address);
             console.log("beforeTONamount : ", Number(beforeTONamount));
             await aura.connect(admin).approve(tonSwapper.address,oneETH);
-            await tonSwapper.connect(admin).tokenToTonMulti(
+            await tonSwapper.connect(admin).tokenToTonHopInput(
                 auraAddress,
                 oneETH,
                 minimumAmount,
@@ -868,7 +879,7 @@ describe("swap", function () {
             let beforeWTONamount = await wton.balanceOf(admin.address);
             console.log("beforeWTONamount : ", Number(beforeWTONamount));
             await aura.connect(admin).approve(tonSwapper.address,oneETH);
-            await tonSwapper.connect(admin).tokenToTonMulti(
+            await tonSwapper.connect(admin).tokenToTonHopInput(
                 auraAddress,
                 oneETH,
                 minimumAmount,
@@ -1037,6 +1048,44 @@ describe("swap", function () {
             expect(resultTOS).to.be.equal(Number(oneETH));
             expect(Number(maxmumInputAmount)).to.be.above(Number(resultWTON));
         })
+
+        it("#11-3. approveAndCall tonToTokenOutput (WTON -> TOS)", async () => {
+            let tx = await tonSwapper.callStatic.exactOutputQuoter(
+                wton.address,
+                tos.address,
+                3000,
+                oneETH
+            )
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber105 = BigNumber.from("105")
+            maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+            console.log("maxmumInputAmount : ", Number(maxmumInputAmount));
+
+            var dec = Number(oneETH);
+            var hex = dec.toString(16);
+            var selector = 3;
+            var hex2 = selector.toString(16);
+            let length = hex.length;
+            let length2 = hex2.length;
+            for(let i = 1; i<=(40-length); i++) {
+                hex = "0"+hex;
+            }
+            for(i= 1; i<=(40-length2); i++) {
+                hex2 = "0"+hex2;
+            }
+            let hex3 = "0x"+hex2+hex+hextosAddress;
+            console.log("hex3 : ", hex3);
+
+            let beforeTOSamount = await tos.balanceOf(admin.address);
+            console.log("beforeTOSamount : ", Number(beforeTOSamount));
+
+            await wton.connect(admin).approveAndCall(tonSwapper.address, maxmumInputAmount, hex3);
+
+            let afterTOSamount = await tos.balanceOf(admin.address);
+            console.log("afterTOSamount : ", Number(afterTOSamount));
+            let result = Number(afterTOSamount)-Number(beforeTOSamount);
+            expect(Number(maxmumInputAmount)).to.be.gte(Number(result));
+        })
     })
 
     describe("#12. tokenToTonExactOutput test", async () => {
@@ -1083,6 +1132,131 @@ describe("swap", function () {
             console.log("resultTOS : ",resultTOS);
             expect(resultWTON).to.be.equal(Number(oneWTON));
             expect(Number(maxmumInputAmount)).to.be.above(Number(resultTOS));
+        })
+    })
+
+    describe("#13. tonToTokenHopOutput test", async () => {
+        it("#13-1. multiExactOutputQuoter test (WTON -> TOS -> token)", async () => {
+            let tx = await tonSwapper.callStatic.multiExactOutputQuoter(
+                wton.address,
+                tos.address,
+                auraAddress,
+                3000,
+                oneETH
+            )
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber105 = BigNumber.from("105")
+            maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+        })
+
+        it("#13-2. tonToTokenHopOutput (WTON -> TOS -> AURA)", async () => {
+            let beforeWTONAmount = await wton.balanceOf(admin.address)
+            let beforeAURAAmount = await aura.balanceOf(admin.address)
+            console.log("beforeAURAAmount : ",Number(beforeAURAAmount));
+            console.log("beforeWTONAmount : ",Number(beforeWTONAmount));
+            console.log("maxmumInputAmount : ",Number(maxmumInputAmount));
+
+            await wton.connect(admin).approve(tonSwapper.address,maxmumInputAmount);
+            await tonSwapper.connect(admin).tonToTokenHopOutput(
+                auraAddress,
+                oneETH,
+                maxmumInputAmount,
+                true
+            )
+            let afterAURAAmount = await aura.balanceOf(admin.address)
+            let afterWTONAmount = await wton.balanceOf(admin.address)
+            console.log("afterAURAAmount : ",Number(afterAURAAmount));
+            console.log("afterWTONAmount : ",Number(afterWTONAmount));
+
+            let resultAURA = Number(afterAURAAmount)-Number(beforeAURAAmount);
+            let resultWTON = Number(beforeWTONAmount)-Number(afterWTONAmount);
+            console.log("resultWTON : ",resultWTON);
+            console.log("resultAURA : ",resultAURA);
+            expect(resultAURA).to.be.equal(Number(oneETH));
+            expect(Number(maxmumInputAmount)).to.be.above(Number(resultWTON));
+        })
+
+        it("#13-3. approveAndCall tonToTokenHopOutput (WTON -> TOS -> AURA)" , async () => {
+            let tx = await tonSwapper.callStatic.multiExactOutputQuoter(
+                wton.address,
+                tos.address,
+                auraAddress,
+                3000,
+                oneETH
+            )
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber105 = BigNumber.from("105")
+            maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+
+            var dec = Number(oneETH);
+            var hex = dec.toString(16);
+            var selector = 4;
+            var hex2 = selector.toString(16);
+            let length = hex.length;
+            let length2 = hex2.length;
+            for(let i = 1; i<=(40-length); i++) {
+                hex = "0"+hex;
+            }
+            for(i= 1; i<=(40-length2); i++) {
+                hex2 = "0"+hex2;
+            }
+            let hex3 = "0x"+hex2+hex+hexauraAddress;
+            console.log("hex3 : ", hex3);
+
+            let beforeAURAamount = await aura.balanceOf(admin.address);
+            console.log("beforeAURAamount : ", Number(beforeAURAamount));
+
+            await wton.connect(admin).approveAndCall(tonSwapper.address, maxmumInputAmount, hex3);
+
+            let afterAURAamount = await aura.balanceOf(admin.address);
+            console.log("afterAURAamount : ", Number(afterAURAamount));
+            let result = Number(afterAURAamount)-Number(beforeAURAamount);
+            expect(Number(maxmumInputAmount)).to.be.gte(Number(result));
+        })
+    })
+
+    describe("#14. tokenToTonHopOutput test", async () => {
+        it("#14-1. multiExactOutputQuoter test (ARUA -> TOS -> WTON)", async () => {
+            let tx = await tonSwapper.callStatic.multiExactOutputQuoter(
+                auraAddress,
+                tos.address,
+                wton.address,
+                3000,
+                oneWTON
+            )
+            // console.log("need inputAURA Amount : ", Number(tx));
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber105 = BigNumber.from("105")
+            maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+        })
+
+        it("#14-2. tokenToTonHopOutput (ARUA -> TOS -> WTON)", async () => {
+            await aura.connect(admin).transfer(account2.address,maxmumInputAmount);
+
+            let beforeWTONAmount = await wton.balanceOf(account2.address)
+            let beforeAURAAmount = await aura.balanceOf(account2.address)
+            console.log("beforeAURAAmount : ",Number(beforeAURAAmount));
+            console.log("beforeWTONAmount : ",Number(beforeWTONAmount));
+            console.log("maxmumInputAmount : ",Number(maxmumInputAmount));
+
+            await aura.connect(account2).approve(tonSwapper.address,maxmumInputAmount);
+            await tonSwapper.connect(account2).tokenToTonHopOutput(
+                auraAddress,
+                oneWTON,
+                maxmumInputAmount,
+                true
+            )
+            let afterAURAAmount = await aura.balanceOf(account2.address)
+            let afterWTONAmount = await wton.balanceOf(account2.address)
+            console.log("afterAURAAmount : ",Number(afterAURAAmount));
+            console.log("afterWTONAmount : ",Number(afterWTONAmount));
+
+            let resultAURA = Number(beforeAURAAmount)-Number(afterAURAAmount);
+            let resultWTON = Number(afterWTONAmount)-Number(beforeWTONAmount);
+            console.log("resultWTON : ",resultWTON);
+            console.log("resultAURA : ",resultAURA);
+            expect(resultWTON).to.be.equal(Number(oneWTON));
+            expect(Number(maxmumInputAmount)).to.be.above(Number(resultAURA));
         })
     })
 });
