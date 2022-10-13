@@ -9,8 +9,9 @@ import "./libraries/TickMath.sol";
 import "./libraries/OracleLibrary.sol";
 import "./libraries/Path.sol";
 
-import "./interfaces/IWTON.sol";
 import "hardhat/console.sol";
+import "./interfaces/IWTON.sol";
+import "./interfaces/ISwapper.sol";
 
 import "./SwapperStorage.sol";
 
@@ -34,10 +35,13 @@ interface IIUniswapV3Pool {
 
 contract Swapper is 
     SwapperStorage,
-    OnApprove
+    OnApprove,
+    ISwapper
 {
     using Path for bytes;
     using SafeERC20 for IERC20;
+
+    /* approveAndCall function */
 
     function onApprove(
         address sender,
@@ -79,180 +83,45 @@ contract Swapper is
         return true;
     }
 
+    /* external function */
 
-    //token -> TOS -> WTON
-    function multiQuoterInputTokenAmount(
-        address _projectToken,
-        uint256 inputAmount
-    )   
-        public
-        returns (uint256 wtonAmount, uint256 tonAmount)
-    {
-         uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
-            _projectToken,
-            tos,
-            3000,
-            inputAmount,
-            0
-        );
-
-        wtonAmount = v3Quoter.quoteExactInputSingle(
-            tos,
-            wton,
-            3000,
-            amountOut1,
-            0
-        );
-        
-        tonAmount = _toWAD(wtonAmount);
-    }
-
-    //token -> TOS -> token
-    //token -> WTON -> token
-    //_firstToken = token
-    //_secondToken = TOS or WTON
-    //_thirdToken = token
-    function multiQuoterTokenToToken(
-        address _firstToken,
-        address _secondToken,
-        address _thirdToken,
-        uint256 inputAmount
-    )
-        public
-        returns (uint256)
-    {
-        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
-            _firstToken,
-            _secondToken,
-            3000,
-            inputAmount,
-            0
-        );
-
-        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
-            _secondToken,
-            _thirdToken,
-            3000,
-            amountOut1,
-            0
-        );
-
-        return amountOut2;
-    }
-
-    function tokenABQuoter(
-        address _inputToken,
-        address _outputToken,
-        uint24 _fee,
-        uint256 _inputAmount
-    )
-        public
-        returns (uint256 amountOut)
-    {
-        amountOut = v3Quoter.quoteExactInputSingle(
-            _inputToken,
-            _outputToken,
-            _fee,
-            _inputAmount,
-            0
-        );
-    }
-
-    function exactOutputQuoter(
-        address _inputToken,
-        address _outputToken,
-        uint24 _fee,
-        uint256 _exactOutputAmount
-    )
-        public
-        returns (uint256 amountIn)
-    {
-        amountIn = v3Quoter.quoteExactOutputSingle(
-            _inputToken,
-            _outputToken,
-            _fee,
-            _exactOutputAmount,
-            0
-        );
-    }
-
-    function multiExactOutputQuoter(
-        address _inputToken,
-        address _middleToken,
-        address _outputToken,
-        uint24 _fee,
-        uint256 _exactOutputAmount
-    )
-        public
-        returns (uint256 amountIn)
-    {
-        amountIn = v3Quoter.quoteExactOutputSingle(
-            _middleToken,
-            _outputToken,
-            _fee,
-            _exactOutputAmount,
-            0
-        );
-        //TOS -> ARUA 로 변환할때 ARUA를 1받기 위해서 넣어야하는 TOS양
-
-        amountIn = v3Quoter.quoteExactOutputSingle(
-            _inputToken,
-            _middleToken,
-            _fee,
-            amountIn,
-            0
-        );
-        //WTON -> TOS로 변환시 넣어야하는 TOS양을 받기 위해서 넣어야하는 WTON양
-    }
-
-    // 1. ton to wton (this function need execute before  the TON approve -> this address)
-    function tonToWton(uint256 _amount) public {
+    /// @inheritdoc ISwapper
+    function tonToWton(uint256 _amount) external override {
         _tonToWTON(msg.sender,_amount);  
     }
 
-    // 2. wton to ton (this function execute before need the WTON approve -> this address)
-    function wtonToTON(uint256 _amount) public {
+    /// @inheritdoc ISwapper
+    function wtonToTON(uint256 _amount) external override {
         _wtonToTON(msg.sender,_amount);
     }
 
-    // 3. ton to token (TON -> WTON -> TOS)
-    // _recipient : 실행하고 받는 주소
-    // _address : getTokenAddress
-    // _amount : tonAmount (_checkWTON이 true면 wtonAmount, _checkWTON이 false면 tonAmount)
-    // _minimumAmount : 최소로 받을 token양
-    // _checkWTON : WTON -> token으로로 변경할 것인지?
+    /// @inheritdoc ISwapper
     function tonToToken(
         address _address,
         uint256 _amount,
         uint256 _minimumAmount,
         bool _checkWTON
     ) 
-        public 
+        external
+        override 
     {  
         _tonToToken(msg.sender,_address,_amount,_minimumAmount,_checkWTON);
     }
 
-    // TON -> WTON -> Token
-    // ?의 TON or wton을 넣어서 (남은 금액은 wton으로 돌려줌)
+    /// @inheritdoc ISwapper
     function tonToTokenExactOutput(
         address _address,
         uint256 _amountOut,
         uint256 _amountInMaximum,
         bool _checkWTON
     )
-        public
+        external
+        override
     {
         _tonToTokenOutput(msg.sender,_address,_amountOut,_amountInMaximum,_checkWTON);
     }
 
-    // 4. token -> TON (TOS -> WTON -> TON)
-    // 유저는 컨트랙트에 approve
-    // 컨트랙트는 token을 uniswapRouter에 approve 해주어야함
-    // _address : tokenAddress
-    // _amount : tokenAmount
-    // _minimumAmount : 최소로 받을 wton양
-    // _checkWTON : 최종 받는 토큰을 TON으로 받을 것인지 WTON으로 받을 것인지? (true = wton으로 받음, false = ton으로 받음)
-    // _wrapEth : eth로 입금할때 체크 (eth로 가능하게함) (eth로 입금할 경우 true, 그외의 토큰 false)
+    /// @inheritdoc ISwapper
     function tokenToTon(
         address _address,
         uint256 _amount,
@@ -260,8 +129,9 @@ contract Swapper is
         bool _checkWTON,
         bool _wrapEth
     )
-        public
+        external
         payable
+        override
     {
         if (_wrapEth) {
             require(msg.value == _amount, "wrong msg.value");
@@ -290,7 +160,7 @@ contract Swapper is
         }
     }
 
-    // token -> TON (정확한 output)
+    /// @inheritdoc ISwapper
     function tokenToTonExactOutput(
         address _address,
         uint256 _amountOut,
@@ -298,8 +168,9 @@ contract Swapper is
         bool _checkWTON,
         bool _wrapEth
     )
-        public
+        external
         payable
+        override
         returns (uint256 amountIn)
     {
         if (_wrapEth) {
@@ -334,56 +205,47 @@ contract Swapper is
         }
     }
 
-    // 5. TON -> ProjectToken (multihop Swap) (TON->WTON->TOS->LYDA)
-    // WTON -> TOKEN -> TOKEN의 멀티 스왑 (TON->WTON->TOS->LYDA)
-    // poolFee를 따로 받던가 3000 고정이던가
-    // _recipient : 실행하고 받는 주소
-    // _projectToken = 최종적으로 받을 token 주소
-    // _amount = 넣을 TON양
-    // _minimumAmount = 최소로 받을 Token양
-    // _checkWTON = 초기 token을 wton으로 받을 것인지? (wton -> tos -> lyda)
+    /// @inheritdoc ISwapper
     function tonToTokenHopInput(
-        address _projectToken,
+        address _address,
         uint256 _amount,
         uint256 _minimumAmount,
         bool _checkWTON
     )
-        public 
+        external
+        override 
     {   
-        _tonToTokenHopInput(msg.sender,_projectToken,_amount,_minimumAmount,_checkWTON);
+        _tonToTokenHopInput(msg.sender,_address,_amount,_minimumAmount,_checkWTON);
     }
 
+    /// @inheritdoc ISwapper
     function tonToTokenHopOutput(
-        address _getToken,
+        address _address,
         uint256 _amountOut,
         uint256 _amountInMaximum,
         bool _checkWTON
     )
-        public
+        external
+        override
     {
-        _tonToTokenHopOutput(msg.sender,_getToken,_amountOut,_amountInMaximum,_checkWTON);
+        _tonToTokenHopOutput(msg.sender,_address,_amountOut,_amountInMaximum,_checkWTON);
     }
 
-    // 6, ProjectToken -> TON (multihop) (AURA -> TOS -> WTON -> TON)
-    // AURA -> TOS -> WTON의 멀티스왑
-    // 최종적으로 WTON -> TON 으로 변경 후 보냄
-    // _projectToken = 바꿀려고하는 token 주소
-    // _amount = 넣을 Token 양
-    // _minimumAmount = 최소로 받을 WTON 양
-    // _checkWTON = 토큰을 WTON으로 받을 것인지 TON으로 받을 것인지
+    /// @inheritdoc ISwapper
     function tokenToTonHopInput(
-        address _projectToken,
+        address _address,
         uint256 _amount,
         uint256 _minimumAmount,
         bool _checkWTON
     )
-        public
+        external
+        override
     {
-        IERC20(_projectToken).safeTransferFrom(msg.sender,address(this), _amount);
+        IERC20(_address).safeTransferFrom(msg.sender,address(this), _amount);
 
         uint256 amountOut = _arraySwapHopInput(
             address(this),
-            _projectToken,
+            _address,
             tos,
             wton,
             _amount,
@@ -399,19 +261,21 @@ contract Swapper is
         }
     }
 
+    /// @inheritdoc ISwapper
     function tokenToTonHopOutput(
-        address _inputToken,
+        address _address,
         uint256 _amountOut,
         uint256 _amountInMaximum,
         bool _checkWTON
     )
-        public
+        external
+        override
     {
-        IERC20(_inputToken).safeTransferFrom(msg.sender,address(this), _amountInMaximum);
+        IERC20(_address).safeTransferFrom(msg.sender,address(this), _amountInMaximum);
 
         uint256 amountIn = _arraySwapHopOutput(
             address(this),
-            _inputToken,
+            _address,
             tos,
             wton,
             _amountOut,
@@ -428,13 +292,11 @@ contract Swapper is
 
         if (amountIn < _amountInMaximum) {
             console.log("_amountInMaximum - amountIn : %s",_amountInMaximum - amountIn);
-            IERC20(_inputToken).transfer(msg.sender, _amountInMaximum - amountIn);
+            IERC20(_address).transfer(msg.sender, _amountInMaximum - amountIn);
         }
     }
 
-    // 7. ProjectToken -> ProjectToken (LYDA -> TOS -> AURA)
-    // ProjectToken -> TOS -> ProjectToken의 멀티 스왑
-    // _wrapEth : eth로 입금할때 체크 (eth로 가능하게함) (ETH -> TOS -> LYDA)
+    /// @inheritdoc ISwapper
     function tokenToToken(
         address _inputaddr,
         address _outputaddr,
@@ -442,8 +304,9 @@ contract Swapper is
         uint256 _minimumAmount,
         bool _wrapEth
     )   
-        public
+        external
         payable
+        override
     {
         if (_wrapEth) {
             require(msg.value == _amount, "wrong msg.value");
@@ -466,6 +329,7 @@ contract Swapper is
         console.log("amountOut : %s", amountOut);
     }
 
+    /// @inheritdoc ISwapper
     function tokenToTokenOutput(
         address _inputaddr,
         address _outputaddr,
@@ -473,8 +337,9 @@ contract Swapper is
         uint256 _amountInMaximum,
         bool _wrapEth
     )
-        public
+        external
         payable
+        override
     {
         if (_wrapEth) {
             require(msg.value == _amountInMaximum, "wrong msg.value");
@@ -503,19 +368,19 @@ contract Swapper is
     }
 
 
-    //DAI -> ETH -> WTON 
+    /// @inheritdoc ISwapper
     function tokenToTokenArray(
         address[] calldata path,
         uint24[] calldata fees,
         uint256 _amount,
         address _getAddress
     ) 
-        public 
+        external 
+        override
         returns (uint256 returnAmount)
     {
         uint256 len = path.length;
-        console.log("len : %s", len);
-        require(len > 0, "empty path");
+        require(len > 2, "empty path");
         require(path.length == fees.length + 1, "PATH_FEE_MISMATCH");
         uint256 lastIndex = len - 1;
         uint256 minimumAmount;
@@ -531,7 +396,7 @@ contract Swapper is
                 minimumAmount, 
                 fees[0]
             );
-            console.log("1");
+
             for (uint256 i = 1; i < lastIndex - 1; i++) {
                 console.log("2,i %s",i);
                 minimumAmount = tokenABQuoter(path[i],path[i+1],fees[i],returnAmount)*99/100;
@@ -544,7 +409,7 @@ contract Swapper is
                     fees[i]
                 );
             }
-            console.log("3");
+
             minimumAmount = tokenABQuoter(path[lastIndex-1],path[lastIndex],fees[lastIndex-1],returnAmount)*99/100;
             returnAmount = _arraySwapInput(
                     _getAddress,
@@ -554,9 +419,7 @@ contract Swapper is
                     minimumAmount,
                     fees[lastIndex-1]
                 );
-        } else {
-
-        }
+        } 
     }
 
     /* internal function */
@@ -706,12 +569,6 @@ contract Swapper is
         }
     }
 
-    // _recipient = 받는사람
-    // _tokenIn = 들어갈 토큰
-    // _tokenOut = 나올 토큰
-    // _amount = 들어갈 토큰 양
-    // _minimumAmount = 나올 토큰의 최소양
-    // _fee = pool의 fee
     function _arraySwapInput(
         address _recipient,
         address _tokenIn,
@@ -827,15 +684,13 @@ contract Swapper is
         IWTON(wton).swapFromTONAndTransfer(_sender,_amount);
     }
 
-
-    //먼저 ton을 wton으로 변경해놔야 추후 ton으로 변경가능함
     // _amount is wton uint
     function _wtonToTON(address _sender, uint256 _amount) internal {
         IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
         IWTON(wton).swapToTONAndTransfer(_sender,_amount);
     }
 
-    /* view function */
+    /* internal pure function */
 
     function _decodeApproveData(
         bytes calldata data
@@ -867,6 +722,138 @@ contract Swapper is
     //@dev transform RAY to WAD
     function _toWAD(uint256 v) internal pure returns (uint256) {
         return v / 10 ** 9;
+    }
+
+
+    /* callstatic function */
+
+    /// @inheritdoc ISwapper
+    function multiQuoterInputTokenAmount(
+        address _projectToken,
+        uint256 inputAmount
+    )   
+        public
+        override
+        returns (uint256 wtonAmount, uint256 tonAmount)
+    {
+         uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+            _projectToken,
+            tos,
+            3000,
+            inputAmount,
+            0
+        );
+
+        wtonAmount = v3Quoter.quoteExactInputSingle(
+            tos,
+            wton,
+            3000,
+            amountOut1,
+            0
+        );
+        
+        tonAmount = _toWAD(wtonAmount);
+    }
+
+    /// @inheritdoc ISwapper
+    function multiQuoterTokenToToken(
+        address _firstToken,
+        address _secondToken,
+        address _thirdToken,
+        uint256 inputAmount
+    )
+        public
+        override
+        returns (uint256)
+    {
+        uint256 amountOut1 = v3Quoter.quoteExactInputSingle(
+            _firstToken,
+            _secondToken,
+            3000,
+            inputAmount,
+            0
+        );
+
+        uint256 amountOut2 = v3Quoter.quoteExactInputSingle(
+            _secondToken,
+            _thirdToken,
+            3000,
+            amountOut1,
+            0
+        );
+
+        return amountOut2;
+    }
+
+    /// @inheritdoc ISwapper
+    function tokenABQuoter(
+        address _inputToken,
+        address _outputToken,
+        uint24 _fee,
+        uint256 _inputAmount
+    )
+        public
+        override
+        returns (uint256 amountOut)
+    {
+        amountOut = v3Quoter.quoteExactInputSingle(
+            _inputToken,
+            _outputToken,
+            _fee,
+            _inputAmount,
+            0
+        );
+    }
+
+    /// @inheritdoc ISwapper
+    function exactOutputQuoter(
+        address _inputToken,
+        address _outputToken,
+        uint24 _fee,
+        uint256 _exactOutputAmount
+    )
+        public
+        override
+        returns (uint256 amountIn)
+    {
+        amountIn = v3Quoter.quoteExactOutputSingle(
+            _inputToken,
+            _outputToken,
+            _fee,
+            _exactOutputAmount,
+            0
+        );
+    }
+
+    /// @inheritdoc ISwapper
+    function multiExactOutputQuoter(
+        address _inputToken,
+        address _middleToken,
+        address _outputToken,
+        uint24 _fee,
+        uint256 _exactOutputAmount
+    )
+        public
+        override
+        returns (uint256 amountIn)
+    {
+        amountIn = v3Quoter.quoteExactOutputSingle(
+            _middleToken,
+            _outputToken,
+            _fee,
+            _exactOutputAmount,
+            0
+        );
+        //TOS -> ARUA 로 변환할때 ARUA를 1받기 위해서 넣어야하는 TOS양
+
+        amountIn = v3Quoter.quoteExactOutputSingle(
+            _inputToken,
+            _middleToken,
+            _fee,
+            amountIn,
+            0
+        );
+        //WTON -> TOS로 변환시 넣어야하는 TOS양을 받기 위해서 넣어야하는 WTON양
     }
 
 }
