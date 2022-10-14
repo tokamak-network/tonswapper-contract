@@ -12,6 +12,7 @@ import "./libraries/Path.sol";
 import "hardhat/console.sol";
 import "./interfaces/IWTON.sol";
 import "./interfaces/ISwapper.sol";
+import "./interfaces/ISwapperEvent.sol";
 
 import "./SwapperStorage.sol";
 
@@ -36,7 +37,8 @@ interface IIUniswapV3Pool {
 contract Swapper is 
     SwapperStorage,
     OnApprove,
-    ISwapper
+    ISwapper,
+    ISwapperEvent
 {
     using Path for bytes;
     using SafeERC20 for IERC20;
@@ -91,7 +93,7 @@ contract Swapper is
     }
 
     /// @inheritdoc ISwapper
-    function wtonToTON(uint256 _amount) external override {
+    function wtonToTon(uint256 _amount) external override {
         _wtonToTON(msg.sender,_amount);
     }
 
@@ -158,6 +160,8 @@ contract Swapper is
             // wton -> ton 으로 변경과 동시에 transfer함
             IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
         }
+
+        emit tokenToTON(msg.sender,_address,amountOut,_amount);
     }
 
     /// @inheritdoc ISwapper
@@ -203,6 +207,8 @@ contract Swapper is
             console.log("_amountInMaximum - amountIn : %s",_amountInMaximum - amountIn);
             IERC20(_address).transfer(msg.sender, _amountInMaximum - amountIn);
         }
+
+        emit tokenToTONOut(msg.sender,_address,amountIn,_amountOut,_amountInMaximum - amountIn);
     }
 
     /// @inheritdoc ISwapper
@@ -259,6 +265,8 @@ contract Swapper is
             // wton -> ton 으로 변경과 동시에 transfer함
             IWTON(wton).swapToTONAndTransfer(msg.sender,amountOut);
         }
+
+        emit tokenToTONHop(msg.sender,_address,amountOut,_amount);
     }
 
     /// @inheritdoc ISwapper
@@ -294,6 +302,8 @@ contract Swapper is
             console.log("_amountInMaximum - amountIn : %s",_amountInMaximum - amountIn);
             IERC20(_address).transfer(msg.sender, _amountInMaximum - amountIn);
         }
+
+        emit tokenToTONHopOut(msg.sender,_address,amountIn,_amountOut,_amountInMaximum - amountIn);
     }
 
     /// @inheritdoc ISwapper
@@ -326,7 +336,9 @@ contract Swapper is
             _amount,
             _minimumAmount
         );
-        console.log("amountOut : %s", amountOut);
+
+        emit tokenToTOKEN(msg.sender,_inputaddr,_outputaddr,amountOut,_amount);
+        // console.log("amountOut : %s", amountOut);
     }
 
     /// @inheritdoc ISwapper
@@ -365,6 +377,8 @@ contract Swapper is
             console.log("_amountInMaximum - amountIn : %s",_amountInMaximum - amountIn);
             IERC20(_inputaddr).transfer(msg.sender, _amountInMaximum - amountIn);
         }
+
+        emit tokenToTOKENOut(msg.sender,_inputaddr,_outputaddr,amountIn,_amountOut,_amountInMaximum - amountIn);
     }
 
 
@@ -419,6 +433,8 @@ contract Swapper is
                     minimumAmount,
                     fees[lastIndex-1]
                 );
+
+            emit tokenToTOKENArray(_getAddress, path[0], path[lastIndex], returnAmount, _amount);
         } 
     }
 
@@ -455,6 +471,8 @@ contract Swapper is
             _minimumAmount,
             poolFee
         );
+
+        emit tonToTOKEN(_recipient,_address,amountOut,wTonSwapAmount);
     }
 
     function _tonToTokenOutput(
@@ -493,6 +511,8 @@ contract Swapper is
             console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);            
             IERC20(wton).transfer(_recipient, wTonSwapAmount - amountIn);
         }
+        
+        emit tonToTOKENOut(_recipient, _address,amountIn,_amountOut,wTonSwapAmount - amountIn);
     }
 
     function _tonToTokenHopInput(
@@ -527,7 +547,8 @@ contract Swapper is
             _minimumAmount
         );
 
-        console.log("amountOut : %s", amountOut);
+        emit tonToTOKENHop(_recipient,_projectToken,amountOut,_amount);
+        // console.log("amountOut : %s", amountOut);
         // IERC20(_projectToken).safeTransfer(msg.sender, amountOut);
     }
 
@@ -567,6 +588,8 @@ contract Swapper is
             console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);            
             IERC20(wton).transfer(_recipient, wTonSwapAmount - amountIn);
         }
+
+        emit tonToTOKENHopOut(_recipient,_getToken,amountIn,_amountOut,wTonSwapAmount - amountIn);
     }
 
     function _arraySwapInput(
@@ -682,12 +705,16 @@ contract Swapper is
         _needapprove(_amount);
         IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
         IWTON(wton).swapFromTONAndTransfer(_sender,_amount);
+
+        emit tonToWTON(_sender,_amount);
     }
 
     // _amount is wton uint
     function _wtonToTON(address _sender, uint256 _amount) internal {
         IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
         IWTON(wton).swapToTONAndTransfer(_sender,_amount);
+
+        emit wtonToTON(_sender,_amount);
     }
 
     /* internal pure function */

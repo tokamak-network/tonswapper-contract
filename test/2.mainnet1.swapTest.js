@@ -639,7 +639,7 @@ describe("swap", function () {
         it("#6-2. wton -> ton test", async () => {
             let beforeTONamount = await ton.balanceOf(admin.address);
             await wton.connect(admin).approve(tonSwapper.address,oneWTON);
-            await tonSwapper.connect(admin).wtonToTON(oneWTON);
+            await tonSwapper.connect(admin).wtonToTon(oneWTON);
             let afterTONamount = await ton.balanceOf(admin.address);
             let result = Number(afterTONamount)-Number(beforeTONamount);
             expect(Number(result)).to.be.equal(Number(oneETH));

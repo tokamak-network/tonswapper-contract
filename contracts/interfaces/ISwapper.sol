@@ -17,7 +17,7 @@ interface ISwapper {
      * @dev                WTON -> TON swap
      * @param _amount      WTON amount to be swapped (input wton uint)
      */
-    function wtonToTON(uint256 _amount) external;
+    function wtonToTon(uint256 _amount) external;
 
     /**
      * @dev                     TON -> WTON -> Token (token have a wton pool)
