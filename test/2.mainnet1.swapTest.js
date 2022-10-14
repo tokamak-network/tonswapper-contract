@@ -1259,4 +1259,45 @@ describe("swap", function () {
             expect(Number(maxmumInputAmount)).to.be.above(Number(resultAURA));
         })
     })
+
+    describe("#15. tokenToTokenOutput test", async () => {
+        it("#15-1. multiExactOutputQuoter test (LYDA -> TOS -> ARUA)", async () => {
+            let tx = await tonSwapper.callStatic.multiExactOutputQuoter(
+                lyda.address,
+                tos.address,
+                auraAddress,
+                3000,
+                oneETH
+            )
+            let bigNumber100 = BigNumber.from("100")
+            let bigNumber105 = BigNumber.from("105")
+            maxmumInputAmount = tx.mul(bigNumber105).div(bigNumber100);
+        })
+
+        it("#15-2. tokenToTokenOutput (LYDA -> TOS -> AURA)", async () => {
+            let beforeLYDAAmount = await lyda.balanceOf(admin.address)
+            let beforeAURAAmount = await aura.balanceOf(admin.address)
+
+            await lyda.connect(admin).approve(tonSwapper.address,maxmumInputAmount);
+            await tonSwapper.connect(admin).tokenToTokenOutput(
+                lyda.address,
+                auraAddress,
+                oneETH,
+                maxmumInputAmount,
+                false
+            )
+
+            let afterAURAAmount = await aura.balanceOf(admin.address)
+            let afterLYDAAmount = await lyda.balanceOf(admin.address)
+            console.log("afterAURAAmount : ",Number(afterAURAAmount));
+            console.log("afterLYDAAmount : ",Number(afterLYDAAmount));
+
+            let resultAURA = Number(afterAURAAmount)-Number(beforeAURAAmount);
+            let resultLYDA = Number(beforeLYDAAmount)-Number(afterLYDAAmount);
+            console.log("resultLYDA : ",resultLYDA);
+            console.log("resultAURA : ",resultAURA);
+            expect(resultAURA).to.be.equal(Number(oneETH));
+            expect(Number(maxmumInputAmount)).to.be.above(Number(resultLYDA));
+        })
+    })
 });
