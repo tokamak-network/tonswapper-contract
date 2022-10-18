@@ -581,7 +581,7 @@ contract Swapper is
             tos,
             _getToken,
             _amountOut,
-            _amountInMaximum
+            wTonSwapAmount
         );
 
         if (amountIn < wTonSwapAmount) {
