@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.1;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
@@ -11,7 +11,7 @@ contract SwapperStorage  {
     address public ton;             //decimal = 18 (WAD)
     address public tos;             //decimal = 18 (WAD)
 
-    IWETH public _WETH; 
+    IWETH public _WETH;
 
     uint24 public constant poolFee = 3000;
 
