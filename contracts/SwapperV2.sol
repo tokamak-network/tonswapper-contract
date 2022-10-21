@@ -4,9 +4,9 @@ pragma solidity ^0.8.12;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { OnApprove } from "./interfaces/OnApprove.sol";
-import "./libraries/FullMath.sol";
-import "./libraries/TickMath.sol";
-import "./libraries/OracleLibrary.sol";
+// import "./libraries/FullMath.sol";
+// import "./libraries/TickMath.sol";
+// import "./libraries/OracleLibrary.sol";
 import "./libraries/Path.sol";
 
 import "./interfaces/IWTON.sol";
@@ -17,7 +17,7 @@ import "./SwapperStorage.sol";
 
 import { ERC165Storage } from "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract SwapperV2 is
     SwapperStorage, ERC165Storage
@@ -128,19 +128,15 @@ contract SwapperV2 is
         internal
         returns (uint256 numPools, address tokenIn, address tokenOut, uint24 fee)
     {
-        // console.log("_exactInit  in ") ;
-        // console.logBool(_byApproveAndCall) ;
 
         numPools = Path.numPools(path);
         require(numPools > 0, "wrong path");
-        // console.log("numPools %s", numPools) ;
+
         if (_reversePath) {
             (tokenOut, tokenIn, fee) = decodeLastPool(path);
         } else {
             (tokenIn, tokenOut, fee) = Path.decodeFirstPool(path);
         }
-        // console.log("tokenOut %s", tokenOut) ;
-        // console.log("tokenIn %s", tokenIn) ;
 
         require(tokenIn != tokenOut, "same tokenIn , tokenOut");
 
@@ -165,14 +161,11 @@ contract SwapperV2 is
             _WETH.deposit{value: amountIn}();
         } else {
             require(msg.value == 0, "msg.value should be 0");
-            // console.log("amountIn %s", amountIn) ;
+
             if (_inputWrapWTON) {
                 uint256 tonAmount = amountIn / 1e9;
                 _needapprove(tonAmount);
 
-                // console.log("tonAmount %s", tonAmount) ;
-                // uint256 all = IERC20(ton).allowance(sender, address(this));
-                // console.log("allowance %s", all) ;
                 IERC20(ton).safeTransferFrom(sender, address(this), tonAmount);
                 require(IWTON(wton).swapFromTON(tonAmount),"wton swapFromTON fail");
             } else {
@@ -195,8 +188,6 @@ contract SwapperV2 is
         returns (uint256 amountOut)
     {
         require(params.recipient == sender, "recipient is not sender");
-        // console.log("_exactOutput  in ") ;
-        // console.logBool(_byApproveAndCall) ;
 
         (uint256 numPools, address tokenIn, address tokenOut, uint24 fee) = _exactInit(
             sender,
@@ -328,7 +319,6 @@ contract SwapperV2 is
         payable
         returns (uint256 amountIn)
     {
-        // require(params.recipient == msg.sender, "recipient is not sender");
         return _exactOutput(
             msg.sender,
             params,
