@@ -173,7 +173,7 @@ describe("Swapper V2", function () {
     const amountExactOut = ethers.utils.parseEther("1000");
     const amountWTONOut = ethers.BigNumber.from("1" + "0".repeat(30));
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.wton, uniswapInfo.weth],
       [FeeAmount.MEDIUM]
@@ -216,7 +216,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap ETH to WTON ", async () => {
     const amountOut = ethers.utils.parseEther("1000" + "1000000000");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.wton, uniswapInfo.weth],
       [FeeAmount.MEDIUM]
@@ -258,7 +258,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap ETH to TOS ", async () => {
     const amountOut = ethers.utils.parseEther("100");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -295,7 +295,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap ETH to AURA ", async () => {
     const amountOut = ethers.utils.parseEther("1000");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -332,7 +332,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap TON to TOS ", async () => {
     const amountOut = ethers.utils.parseEther("1");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM]
@@ -381,7 +381,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap TON to AURA ", async () => {
     const amountOut = ethers.utils.parseEther("100");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -423,7 +423,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap WTON to TOS ", async () => {
     const amountOut = ethers.utils.parseEther("100");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM]
@@ -459,7 +459,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap WTON to AURA ", async () => {
     const amountOut = ethers.utils.parseEther("100");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -495,7 +495,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap AURA to LYDA ", async () => {
     const amountOut = ethers.utils.parseEther("100");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.lyda, uniswapInfo.tos, uniswapInfo.aura],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -531,7 +531,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap AURA to TON ", async () => {
     const amountOut = ethers.utils.parseEther("1");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -567,7 +567,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap AURA to WTON ", async () => {
     const amountOut = ethers.utils.parseEther("1");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -602,7 +602,7 @@ describe("Swapper V2", function () {
   it("exactOutput: swap AURA to TOS ", async () => {
     const amountOut = ethers.utils.parseEther("1");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.tos, uniswapInfo.aura],
       [FeeAmount.MEDIUM]
@@ -1056,7 +1056,7 @@ describe("Swapper V2", function () {
   it("TON.approveAndCall:  exactOutput: swap TON to TOS ", async () => {
     const amountOut = ethers.utils.parseEther("1");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM]
@@ -1133,7 +1133,7 @@ describe("Swapper V2", function () {
   it("TON.approveAndCall:  exactOutput: swap TON to AURA ", async () => {
     const amountOut = ethers.utils.parseEther("1");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -1311,7 +1311,7 @@ describe("Swapper V2", function () {
   it("WTON.approveAndCall:  exactOutput: swap WTON to AURA ", async () => {
     const amountOut = ethers.utils.parseEther("1000");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
@@ -1362,7 +1362,7 @@ describe("Swapper V2", function () {
   it("WTON.approveAndCall:  exactOutput: swap WTON to TOS ", async () => {
     const amountOut = ethers.utils.parseEther("1000");
 
-    // ** !! reserver path !!
+    // ** !! reverse path !!
     const reversePath = encodePath(
       [uniswapInfo.tos, uniswapInfo.wton],
       [FeeAmount.MEDIUM]
