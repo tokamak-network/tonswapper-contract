@@ -310,9 +310,9 @@ contract SwapperV2 is
             amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
         }
 
-        if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(msg.sender, params.amountOut);
+        if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, params.amountOut);
         if (amountIn < params.amountInMaximum) {
-            IERC20(tokenIn).transfer(msg.sender, params.amountInMaximum - amountIn);
+            IERC20(tokenIn).transfer(sender, params.amountInMaximum - amountIn);
         }
     }
 
