@@ -49,6 +49,14 @@ module.exports = {
       gasMultiplier: 1.25,
       gasPrice: 25000000000,
     },
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [
+        `${process.env.PRIVATE_KEY}`,
+        `${process.env.PRIVATE_KEY_2}`,
+        `${process.env.PRIVATE_KEY_3}`,
+      ],
+    }
   },
   localhost: {
     timeout: 100000000,

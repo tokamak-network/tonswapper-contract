@@ -4,14 +4,12 @@ pragma solidity ^0.8.12;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { OnApprove } from "./interfaces/OnApprove.sol";
-// import "./libraries/FullMath.sol";
-// import "./libraries/TickMath.sol";
-// import "./libraries/OracleLibrary.sol";
+
 import "./libraries/Path.sol";
 
 import "./interfaces/IWTON.sol";
-import "./interfaces/ISwapper.sol";
-import "./interfaces/ISwapperEvent.sol";
+import "./interfaces/ISwapperV2.sol";
+import "./interfaces/ISwapperV2Event.sol";
 
 import "./SwapperStorage.sol";
 
@@ -20,17 +18,20 @@ import { ERC165Storage } from "@openzeppelin/contracts/utils/introspection/ERC16
 // import "hardhat/console.sol";
 
 contract SwapperV2 is
-    SwapperStorage, ERC165Storage
+    SwapperStorage, 
+    ERC165Storage,
+    ISwapperV2,
+    ISwapperV2Event
 {
     using Path for bytes;
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
 
-    constructor() {
-        bytes4 OnApproveSelector = bytes4(keccak256("onApprove(address,address,uint256,bytes)"));
+    // constructor() {
+    //     bytes4 OnApproveSelector = bytes4(keccak256("onApprove(address,address,uint256,bytes)"));
 
-        _registerInterface(OnApproveSelector);
-    }
+    //     _registerInterface(OnApproveSelector);
+    // }
 
     /* approveAndCall function */
 
@@ -82,27 +83,10 @@ contract SwapperV2 is
         return true;
     }
 
-    function initialize(
-        address _wton,
-        address _ton,
-        address _tos,
-        address _uniswapRouter,
-        address _weth
-    )
-        external
-    {
-        require(address(tos) == address(0), "already initialized.");
-        wton = _wton;
-        ton = _ton;
-        tos = _tos;
-        uniswapRouter = ISwapRouter(_uniswapRouter);
-        _WETH = IWETH(_weth);
-    }
-
-
     function decodeLastPool(bytes memory path)
         public
         pure
+        override
         returns (
             address tokenA,
             address tokenB,
@@ -238,6 +222,7 @@ contract SwapperV2 is
     )
         public
         payable
+        override
         returns (uint256 amountOut)
     {
         return _exactInput(
@@ -317,6 +302,7 @@ contract SwapperV2 is
     )
         public
         payable
+        override
         returns (uint256 amountIn)
     {
         return _exactOutput(
