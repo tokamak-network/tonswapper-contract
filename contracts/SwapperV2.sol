@@ -15,7 +15,7 @@ import "./SwapperStorage.sol";
 
 import { ERC165Storage } from "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract SwapperV2 is
     SwapperStorage, 
@@ -27,12 +27,6 @@ contract SwapperV2 is
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
 
-    // constructor() {
-    //     bytes4 OnApproveSelector = bytes4(keccak256("onApprove(address,address,uint256,bytes)"));
-
-    //     _registerInterface(OnApproveSelector);
-    // }
-
     /* approveAndCall function */
 
     function onApprove(
@@ -41,7 +35,6 @@ contract SwapperV2 is
         uint256 transferAmount,
         bytes calldata data
     ) external returns (bool) {
-
         require(msg.sender == address(ton) || msg.sender == address(wton),
         "sender is not ton or wton.") ;
 
@@ -54,7 +47,6 @@ contract SwapperV2 is
         uint256 paramsDataLen = paramsData.length;
 
         if (data.toUint8(0) > 0) {
-
             ISwapRouter.ExactOutputParams memory param =
                 ISwapRouter.ExactOutputParams({
                     path: paramsData.slice(0, paramsDataLen-116-1),
@@ -67,7 +59,6 @@ contract SwapperV2 is
             _exactOutput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
 
         } else {
-
             ISwapRouter.ExactInputParams memory param =
                 ISwapRouter.ExactInputParams({
                     path: paramsData.slice(0, paramsDataLen-116-1),
@@ -83,43 +74,87 @@ contract SwapperV2 is
         return true;
     }
 
-    function decodeLastPool(bytes memory path)
-        public
-        pure
+    /* external function */
+
+    /// @inheritdoc ISwapperV2
+    function exactInput(
+        ISwapRouter.ExactInputParams memory params,
+        bool _wrapEth,
+        bool _inputWrapWTON,
+        bool _outputUnwrapTON
+    )
+        external
+        payable
         override
-        returns (
-            address tokenA,
-            address tokenB,
-            uint24 fee
-        )
+        returns (uint256 amountOut)
     {
-        uint256 ONE_PATH_SIZE = 43;
-        bytes memory data = path.slice(path.length-ONE_PATH_SIZE, ONE_PATH_SIZE);
-        tokenA = data.toAddress(0);
-        fee = data.toUint24(20);
-        tokenB = data.toAddress(23);
+        return _exactInput(
+            msg.sender,
+            params,
+            _wrapEth,
+            _inputWrapWTON,
+            _outputUnwrapTON
+        );
+    }
+
+    /// @inheritdoc ISwapperV2
+    function exactOutput(
+        ISwapRouter.ExactOutputParams memory params,
+        bool _wrapEth,
+        bool _inputWrapWTON,
+        bool _outputUnwrapTON
+    )
+        external
+        payable
+        override
+        returns (uint256 amountIn)
+    {
+        return _exactOutput(
+            msg.sender,
+            params,
+            _wrapEth,
+            _inputWrapWTON,
+            _outputUnwrapTON
+        );
+    }
+
+    /* internal function */
+
+    function _needapprove(
+        uint256 _amount
+    )
+        internal
+    {
+        if(IERC20(ton).allowance(address(this), wton) < _amount) {
+            IERC20(ton).approve(
+                wton,
+                type(uint256).max
+            );
+        }
     }
 
     function _exactInit(
-            address sender,
-            bytes memory path,
-            uint256 amountIn,
-            bool _wrapEth,
-            bool _inputWrapWTON,
-            bool _outputUnwrapTON,
-            bool _reversePath
+        address sender,
+        bytes memory path,
+        uint256 amountIn,
+        bool _wrapEth,
+        bool _inputWrapWTON,
+        bool _outputUnwrapTON,
+        bool _reversePath
     )
         internal
-        returns (uint256 numPools, address tokenIn, address tokenOut, uint24 fee)
+        returns (uint256 numPools, address tokenIn, address lastTokenOut, uint24 fee)
     {
 
         numPools = Path.numPools(path);
         require(numPools > 0, "wrong path");
-
+        address tokenOut;
         if (_reversePath) {
             (tokenOut, tokenIn, fee) = decodeLastPool(path);
+            (lastTokenOut,,) = Path.decodeFirstPool(path);
         } else {
             (tokenIn, tokenOut, fee) = Path.decodeFirstPool(path);
+            (,lastTokenOut,) = decodeLastPool(path);
         }
 
         require(tokenIn != tokenOut, "same tokenIn , tokenOut");
@@ -131,10 +166,8 @@ contract SwapperV2 is
             require(tokenOut == address(wton), "tokenOut is not WTON");
         } else if (_outputUnwrapTON) {
             if (_reversePath) {
-                (address lastTokenOut,,) = Path.decodeFirstPool(path);
                 require(lastTokenOut == address(wton), "tokenOut is not WTON");
             } else {
-                (, address lastTokenOut,) = decodeLastPool(path);
                 require(lastTokenOut == address(wton), "tokenOut is not WTON");
             }
 
@@ -156,10 +189,7 @@ contract SwapperV2 is
                 IERC20(tokenIn).safeTransferFrom(sender, address(this), amountIn);
             }
         }
-    }
-
-    //https://docs.uniswap.org/protocol/guides/swaps/single-swaps
-    //https://docs.uniswap.org/protocol/guides/swaps/multihop-swaps
+    }    
 
     function _exactInput(
         address sender,
@@ -173,7 +203,7 @@ contract SwapperV2 is
     {
         require(params.recipient == sender, "recipient is not sender");
 
-        (uint256 numPools, address tokenIn, address tokenOut, uint24 fee) = _exactInit(
+        (uint256 numPools, address tokenIn, address lastTokenOut, uint24 fee) = _exactInit(
             sender,
             params.path,
             params.amountIn,
@@ -192,7 +222,7 @@ contract SwapperV2 is
             ISwapRouter.ExactInputSingleParams memory param =
                 ISwapRouter.ExactInputSingleParams({
                     tokenIn: tokenIn,
-                    tokenOut: tokenOut,
+                    tokenOut: lastTokenOut,
                     fee: fee,
                     recipient: recipient,
                     deadline: block.timestamp + 12,
@@ -212,27 +242,16 @@ contract SwapperV2 is
 
             if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
         }
-    }
 
-    function exactInput(
-        ISwapRouter.ExactInputParams memory params,
-        bool _wrapEth,
-        bool _inputWrapWTON,
-        bool _outputUnwrapTON
-    )
-        public
-        payable
-        override
-        returns (uint256 amountOut)
-    {
-        return _exactInput(
-            msg.sender,
-            params,
-            _wrapEth,
-            _inputWrapWTON,
-            _outputUnwrapTON
+        emit exactInputEvent(
+            recipient,
+            tokenIn,
+            lastTokenOut,
+            params.amountIn,
+            amountOut
         );
     }
+
 
     function _exactOutput(
         address sender,
@@ -246,7 +265,7 @@ contract SwapperV2 is
     {
         require(params.recipient == sender, "recipient is not sender");
 
-        (uint256 numPools, address tokenIn, address tokenOut, uint24 fee) = _exactInit(
+        (uint256 numPools, address tokenIn, address lastTokenOut, uint24 fee) = _exactInit(
             sender,
             params.path,
             params.amountInMaximum,
@@ -268,7 +287,7 @@ contract SwapperV2 is
             ISwapRouter.ExactOutputSingleParams memory param =
                 ISwapRouter.ExactOutputSingleParams({
                     tokenIn: tokenIn,
-                    tokenOut: tokenOut,
+                    tokenOut: lastTokenOut,
                     fee: fee,
                     recipient: recipient,
                     deadline: block.timestamp,
@@ -287,45 +306,42 @@ contract SwapperV2 is
         }
 
         if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, params.amountOut);
+        uint256 refund;
+        uint256 amountOut1 = params.amountOut;
+        sender = sender;
         if (amountIn < params.amountInMaximum) {
-            IERC20(tokenIn).transfer(sender, params.amountInMaximum - amountIn);
+            refund = params.amountInMaximum - amountIn;
+            IERC20(tokenIn).transfer(sender, refund);
         }
-    }
 
-
-
-    function exactOutput(
-        ISwapRouter.ExactOutputParams memory params,
-        bool _wrapEth,
-        bool _inputWrapWTON,
-        bool _outputUnwrapTON
-    )
-        public
-        payable
-        override
-        returns (uint256 amountIn)
-    {
-        return _exactOutput(
-            msg.sender,
-            params,
-            _wrapEth,
-            _inputWrapWTON,
-            _outputUnwrapTON
+        emit exactOutputEvent(
+            recipient,
+            tokenIn,
+            lastTokenOut,
+            amountIn,
+            amountOut1,
+            refund
         );
     }
 
-    function _needapprove(
-        uint256 _amount
-    )
-        internal
-    {
-        if(IERC20(ton).allowance(address(this), wton) < _amount) {
-            IERC20(ton).approve(
-                wton,
-                type(uint256).max
-            );
-        }
-    }
+    /* pure function */
 
+    /// @inheritdoc ISwapperV2
+    function decodeLastPool(bytes memory path)
+        public
+        pure
+        override
+        returns (
+            address tokenA,
+            address tokenB,
+            uint24 fee
+        )
+    {
+        uint256 ONE_PATH_SIZE = 43;
+        bytes memory data = path.slice(path.length-ONE_PATH_SIZE, ONE_PATH_SIZE);
+        tokenA = data.toAddress(0);
+        fee = data.toUint24(20);
+        tokenB = data.toAddress(23);
+    }
 
 }

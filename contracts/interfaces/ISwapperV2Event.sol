@@ -1,8 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-
 interface ISwapperV2Event {
 
+    /// @dev                     exactInput token swap
+    /// @param recipient         recipient Address
+    /// @param inputToken        input Address
+    /// @param outputToken       output Address
+    /// @param amountIn          amountIn
+    /// @param amountOut         amountOut
+    event exactInputEvent(
+        address recipient,
+        address inputToken,
+        address outputToken,
+        uint256 amountIn,
+        uint256 amountOut
+    );
+
+    /// @dev                     exactOutput token swap
+    /// @param recipient         recipient Address
+    /// @param inputToken        input Address
+    /// @param outputToken       output Address
+    /// @param amountOut         amountOut
+    /// @param amountIn          amountIn
+    /// @param refund            refund amount(amountInMaximum - amountIn)
+    event exactOutputEvent(
+        address recipient,
+        address inputToken,
+        address outputToken,
+        uint256 amountIn,
+        uint256 amountOut,
+        uint256 refund 
+    );
 }
