@@ -143,12 +143,12 @@ contract SwapperV2 is
         bool _reversePath
     )
         internal
-        returns (uint256 numPools, address tokenIn, address lastTokenOut, uint24 fee)
+        returns (uint256 numPools, address tokenIn, address tokenOut, address lastTokenOut, uint24 fee)
     {
 
         numPools = Path.numPools(path);
         require(numPools > 0, "wrong path");
-        address tokenOut;
+        // address tokenOut;
         if (_reversePath) {
             (tokenOut, tokenIn, fee) = decodeLastPool(path);
             (lastTokenOut,,) = Path.decodeFirstPool(path);
@@ -203,7 +203,7 @@ contract SwapperV2 is
     {
         require(params.recipient == sender, "recipient is not sender");
 
-        (uint256 numPools, address tokenIn, address lastTokenOut, uint24 fee) = _exactInit(
+        (uint256 numPools, address tokenIn, address tokenOut, address lastTokenOut, uint24 fee) = _exactInit(
             sender,
             params.path,
             params.amountIn,
@@ -222,7 +222,7 @@ contract SwapperV2 is
             ISwapRouter.ExactInputSingleParams memory param =
                 ISwapRouter.ExactInputSingleParams({
                     tokenIn: tokenIn,
-                    tokenOut: lastTokenOut,
+                    tokenOut: tokenOut,
                     fee: fee,
                     recipient: recipient,
                     deadline: block.timestamp + 12,
@@ -265,7 +265,7 @@ contract SwapperV2 is
     {
         require(params.recipient == sender, "recipient is not sender");
 
-        (uint256 numPools, address tokenIn, address lastTokenOut, uint24 fee) = _exactInit(
+        (uint256 numPools, address tokenIn, address tokenOut, address lastTokenOut, uint24 fee) = _exactInit(
             sender,
             params.path,
             params.amountInMaximum,
@@ -287,7 +287,7 @@ contract SwapperV2 is
             ISwapRouter.ExactOutputSingleParams memory param =
                 ISwapRouter.ExactOutputSingleParams({
                     tokenIn: tokenIn,
-                    tokenOut: lastTokenOut,
+                    tokenOut: tokenOut,
                     fee: fee,
                     recipient: recipient,
                     deadline: block.timestamp,
