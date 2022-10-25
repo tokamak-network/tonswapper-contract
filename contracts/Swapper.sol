@@ -34,7 +34,7 @@ interface IIUniswapV3Pool {
     ) external returns (int256 amount0, int256 amount1);
 }
 
-contract Swapper is 
+contract Swapper is
     SwapperStorage,
     OnApprove,
     ISwapper,
@@ -89,7 +89,7 @@ contract Swapper is
 
     /// @inheritdoc ISwapper
     function tonToWton(uint256 _amount) external override {
-        _tonToWTON(msg.sender,_amount);  
+        _tonToWTON(msg.sender,_amount);
     }
 
     /// @inheritdoc ISwapper
@@ -103,10 +103,10 @@ contract Swapper is
         uint256 _amount,
         uint256 _minimumAmount,
         bool _checkWTON
-    ) 
+    )
         external
-        override 
-    {  
+        override
+    {
         _tonToToken(msg.sender,_address,_amount,_minimumAmount,_checkWTON);
     }
 
@@ -143,7 +143,7 @@ contract Swapper is
             require(msg.value == 0, "msg.value should be 0");
             IERC20(_address).safeTransferFrom(msg.sender,address(this), _amount);
         }
-        
+
         uint256 amountOut = _arraySwapInput(
             address(this),
             _address,
@@ -152,7 +152,7 @@ contract Swapper is
             _minimumAmount,
             poolFee
         );
-        
+
         if(_checkWTON) {
             //wton으로 바로 보내줌
             IWTON(wton).transfer(msg.sender,amountOut);
@@ -194,7 +194,7 @@ contract Swapper is
             _amountInMaximum,
             poolFee
         );
-        
+
         if(_checkWTON) {
             //wton으로 바로 보내줌
             IWTON(wton).transfer(msg.sender,_amountOut);
@@ -219,8 +219,8 @@ contract Swapper is
         bool _checkWTON
     )
         external
-        override 
-    {   
+        override
+    {
         _tonToTokenHopInput(msg.sender,_address,_amount,_minimumAmount,_checkWTON);
     }
 
@@ -313,7 +313,7 @@ contract Swapper is
         uint256 _amount,
         uint256 _minimumAmount,
         bool _wrapEth
-    )   
+    )
         external
         payable
         override
@@ -388,8 +388,8 @@ contract Swapper is
         uint24[] calldata fees,
         uint256 _amount,
         address _getAddress
-    ) 
-        external 
+    )
+        external
         override
         returns (uint256 returnAmount)
     {
@@ -404,10 +404,10 @@ contract Swapper is
             minimumAmount = tokenABQuoter(path[0],path[1],fees[0],_amount)*99/100;
             returnAmount = _arraySwapInput(
                 address(this),
-                path[0], 
-                path[1], 
-                _amount, 
-                minimumAmount, 
+                path[0],
+                path[1],
+                _amount,
+                minimumAmount,
                 fees[0]
             );
 
@@ -435,7 +435,7 @@ contract Swapper is
                 );
 
             emit tokenToTOKENArray(_getAddress, path[0], path[lastIndex], returnAmount, _amount);
-        } 
+        }
     }
 
     /* internal function */
@@ -446,7 +446,7 @@ contract Swapper is
         uint256 _amount,
         uint256 _minimumAmount,
         bool _checkWTON
-    ) 
+    )
         internal
     {
         uint256 wTonSwapAmount;
@@ -480,7 +480,7 @@ contract Swapper is
         address _address,
         uint256 _amountOut,
         uint256 _amountInMaximum,
-        bool _checkWTON 
+        bool _checkWTON
     )
         internal
     {
@@ -508,10 +508,10 @@ contract Swapper is
         );
 
         if (amountIn < wTonSwapAmount) {
-            console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);            
+            console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);
             IERC20(wton).transfer(_recipient, wTonSwapAmount - amountIn);
         }
-        
+
         emit tonToTOKENOut(_recipient, _address,amountIn,_amountOut,wTonSwapAmount - amountIn);
     }
 
@@ -520,7 +520,7 @@ contract Swapper is
         address _projectToken,
         uint256 _amount,
         uint256 _minimumAmount,
-        bool _checkWTON 
+        bool _checkWTON
     )
         internal
     {
@@ -585,7 +585,7 @@ contract Swapper is
         );
 
         if (amountIn < wTonSwapAmount) {
-            console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);            
+            console.log("wTonSwapAmount - amountIn : %s",wTonSwapAmount - amountIn);
             IERC20(wton).transfer(_recipient, wTonSwapAmount - amountIn);
         }
 
@@ -637,7 +637,7 @@ contract Swapper is
                 amountInMaximum: _amountInMaximum,
                 amountOut: _amountOut
             });
-        
+
         amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
     }
 
@@ -690,8 +690,8 @@ contract Swapper is
 
     function _needapprove(
         uint256 _amount
-    ) 
-        internal 
+    )
+        internal
     {
         if(IERC20(ton).allowance(address(this),wton) < _amount) {
             IERC20(ton).approve(
@@ -723,7 +723,7 @@ contract Swapper is
         bytes calldata data
     ) internal pure returns (address approveData,address selector,address getTokenAddress) {
         require(data.length == 60, "data error");
-        
+
         bytes memory data1 = data[20:40];
         bytes memory data2 = data[0:20];
         bytes memory data3 = data[40:60];
@@ -740,7 +740,7 @@ contract Swapper is
     ) internal pure returns (uint256){
         return uint256(uint160(a));
     }
-    
+
     //@dev transform WAD to RAY
     function _toRAY(uint256 v) internal pure returns (uint256) {
         return v * 10 ** 9;
@@ -758,7 +758,7 @@ contract Swapper is
     function multiQuoterInputTokenAmount(
         address _projectToken,
         uint256 inputAmount
-    )   
+    )
         public
         override
         returns (uint256 wtonAmount, uint256 tonAmount)
@@ -779,7 +779,7 @@ contract Swapper is
             amountOut1,
             0
         );
-        
+
         tonAmount = _toWAD(wtonAmount);
     }
 

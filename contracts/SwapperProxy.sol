@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.1;
 
 import "./SwapperStorage.sol";
 import "./proxy/BaseProxy.sol";
@@ -10,7 +10,7 @@ contract SwapperProxy is
     SwapperStorage,
     BaseProxy,
     ERC165Storage
-{   
+{
     constructor() {
         bytes4 OnApproveSelector= bytes4(keccak256("onApprove(address,address,uint256,bytes)"));
 
