@@ -35,8 +35,8 @@ contract SwapperV2 is
         require(msg.sender == address(ton) || msg.sender == address(wton),
         "sender is not ton or wton.") ;
 
-        // address user = sender;
         uint256 len = data.length;
+        require(len >= 163, "data.length need the 163 over");
         bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
         bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
         bool wrapEthbool = (data.toUint8(len-3) == 0?false:true);
