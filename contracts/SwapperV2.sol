@@ -224,16 +224,13 @@ contract SwapperV2 is
                 });
 
             amountOut = ISwapRouter(uniswapRouter).exactInputSingle(param);
-
-            if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
-
         } else {
             params.recipient = recipient;
             params.deadline = block.timestamp + 12;
             amountOut = ISwapRouter(uniswapRouter).exactInput(params);
-
-            if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
         }
+
+        if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
 
         emit exactInputEvent(
             recipient,
@@ -307,7 +304,7 @@ contract SwapperV2 is
         }
 
         emit exactOutputEvent(
-            recipient,
+            sender,
             tokenIn,
             lastTokenOut,
             amountIn,
