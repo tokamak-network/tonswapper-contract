@@ -13,13 +13,10 @@ import "./interfaces/ISwapperV2Event.sol";
 
 import "./SwapperStorage.sol";
 
-import { ERC165Storage } from "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
-
 import "hardhat/console.sol";
 
 contract SwapperV2 is
-    SwapperStorage, 
-    ERC165Storage,
+    SwapperStorage,
     ISwapperV2,
     ISwapperV2Event
 {
