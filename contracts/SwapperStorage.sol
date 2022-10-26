@@ -17,6 +17,6 @@ contract SwapperStorage  {
 
     ISwapRouter public uniswapRouter;
 
-    IQuoter v3Quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);     //mainnet
+    // IQuoter v3Quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);     //mainnet
 
 }

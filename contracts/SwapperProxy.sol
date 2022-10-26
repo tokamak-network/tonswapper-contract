@@ -29,7 +29,7 @@ contract SwapperProxy is
         address _uniswapRouter,
         address _weth
     )
-        external onlyProxyOwner
+        external onlyOwner
     {
         require(address(tos) == address(0), "already initialized.");
         wton = _wton;
