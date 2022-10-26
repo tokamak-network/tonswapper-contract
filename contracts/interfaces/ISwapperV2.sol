@@ -11,7 +11,7 @@ interface ISwapperV2 {
     
     /**
      * @dev
-     * @param params            params is swap information (recipient, path, amountIn, minimumAmountOut)
+     * @param params            params is swap information (recipient, path, amountIn, minimumAmountOut) More details are in the link. https://docs.uniswap.org/protocol/reference/periphery/interfaces/ISwapRouter
      * @param _wrapEth          if input the ETH, _wrapEth is true
      * @param _inputWrapWTON    if input the TON, _inputWrapWTON is true
      * @param _outputUnwrapTON  if output get TON, _outputUnwrapTON is true
@@ -28,7 +28,7 @@ interface ISwapperV2 {
 
     /**
      * @dev
-     * @param params            params is swap information (recipient, path, amountInMaximum, amountOut)
+     * @param params            params is swap information (recipient, path, amountInMaximum, amountOut) More details are in the link. https://docs.uniswap.org/protocol/reference/periphery/interfaces/ISwapRouter
      * @param _wrapEth          if input the ETH, _wrapEth is true
      * @param _inputWrapWTON    if input the TON, _inputWrapWTON is true
      * @param _outputUnwrapTON  if output get TON, _outputUnwrapTON is true
