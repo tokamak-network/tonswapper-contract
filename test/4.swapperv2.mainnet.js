@@ -13,7 +13,7 @@ const TOS_ABI = require("../abis/TOS.json");
 const TON_ABI = require("../abis/TON.json");
 const WTON_ABI = require("../abis/WTON.json");
 const QuoterABI = require("../abis/Quoter.json");
-const SWAP_ABI = require("../artifacts/contracts/Swapper.sol/Swapper.json");
+// const SWAP_ABI = require("../artifacts/contracts/Swapper.sol/Swapper.json");
 const SWAP2_ABI = require("../artifacts/contracts/SwapperV2.sol/SwapperV2.json");
 
 const { expect } = require("chai");
