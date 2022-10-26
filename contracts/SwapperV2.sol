@@ -162,12 +162,7 @@ contract SwapperV2 is
         if (_outputUnwrapTON && numPools == 1) {
             require(tokenOut == address(wton), "tokenOut is not WTON");
         } else if (_outputUnwrapTON) {
-            if (_reversePath) {
-                require(lastTokenOut == address(wton), "tokenOut is not WTON");
-            } else {
-                require(lastTokenOut == address(wton), "tokenOut is not WTON");
-            }
-
+            require(lastTokenOut == address(wton), "tokenOut is not WTON");
         }
 
         if (_wrapEth) {
