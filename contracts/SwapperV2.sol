@@ -36,42 +36,66 @@ contract SwapperV2 is
         "sender is not ton or wton.") ;
 
         uint256 len = data.length;
-        require(len >= 163, "data.length need the 163 over");
-        bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
-        bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
-        bool wrapEthbool = (data.toUint8(len-3) == 0?false:true);
-        bytes memory paramsData = data.slice(1, len-3);
-        uint256 paramsDataLen = paramsData.length;
+        console.log("data.length : %s",len);
+        require(len >= 163 || len == 21, "data.length need the 163 over");
+        if(len >= 163) {
+            bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
+            bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
+            bool wrapEthbool = (data.toUint8(len-3) == 0?false:true);
+            bytes memory paramsData = data.slice(1, len-3);
+            uint256 paramsDataLen = paramsData.length;
 
-        if (data.toUint8(0) > 0) {
-            ISwapRouter.ExactOutputParams memory param =
-                ISwapRouter.ExactOutputParams({
-                    path: paramsData.slice(0, paramsDataLen-116-1),
-                    recipient: paramsData.toAddress(paramsDataLen-116-1),
-                    deadline: block.timestamp,
-                    amountOut: paramsData.toUint256(paramsDataLen-64-1),
-                    amountInMaximum: paramsData.toUint256(paramsDataLen-32-1)
-                });
+            if (data.toUint8(0) > 0) {
+                ISwapRouter.ExactOutputParams memory param =
+                    ISwapRouter.ExactOutputParams({
+                        path: paramsData.slice(0, paramsDataLen-116-1),
+                        recipient: paramsData.toAddress(paramsDataLen-116-1),
+                        deadline: block.timestamp,
+                        amountOut: paramsData.toUint256(paramsDataLen-64-1),
+                        amountInMaximum: paramsData.toUint256(paramsDataLen-32-1)
+                    });
 
-            _exactOutput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+                _exactOutput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
 
-        } else {
-            ISwapRouter.ExactInputParams memory param =
-                ISwapRouter.ExactInputParams({
-                    path: paramsData.slice(0, paramsDataLen-116-1),
-                    recipient: paramsData.toAddress(paramsDataLen-116-1),
-                    deadline: block.timestamp,
-                    amountIn: paramsData.toUint256(paramsDataLen-64-1),
-                    amountOutMinimum: paramsData.toUint256(paramsDataLen-32-1)
-                });
+            } else {
+                ISwapRouter.ExactInputParams memory param =
+                    ISwapRouter.ExactInputParams({
+                        path: paramsData.slice(0, paramsDataLen-116-1),
+                        recipient: paramsData.toAddress(paramsDataLen-116-1),
+                        deadline: block.timestamp,
+                        amountIn: paramsData.toUint256(paramsDataLen-64-1),
+                        amountOutMinimum: paramsData.toUint256(paramsDataLen-32-1)
+                    });
 
-            _exactInput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+                _exactInput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+            }
+        } else if (len == 21) {
+            bool tonToWTON = (data.toUint8(len-1) == 0?false:true);
+            console.log("tonToWTON : %s", tonToWTON);
+            console.log("transferAmount : %s", transferAmount);
+            address getAddress = data.toAddress(len-21);
+            console.log("getAddress : %s", getAddress);
+            if (tonToWTON) {
+                _tonToWTON(getAddress,transferAmount);
+            } else {
+                _wtonToTON(getAddress,transferAmount);
+            }
         }
 
         return true;
     }
 
     /* external function */
+
+    /// @inheritdoc ISwapperV2
+    function tonToWton(uint256 _amount) external override {
+        _tonToWTON(msg.sender,_amount);
+    }
+
+    /// @inheritdoc ISwapperV2
+    function wtonToTon(uint256 _amount) external override {
+        _wtonToTON(msg.sender,_amount);
+    }
 
     /// @inheritdoc ISwapperV2
     function exactInput(
@@ -116,6 +140,22 @@ contract SwapperV2 is
     }
 
     /* internal function */
+
+    function _tonToWTON(address _sender, uint256 _amount) internal {
+        _needapprove(_amount);
+        IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
+        IWTON(wton).swapFromTONAndTransfer(_sender,_amount);
+
+        emit tonToWTON(_sender,_amount);
+    }
+
+    // _amount is wton uint
+    function _wtonToTON(address _sender, uint256 _amount) internal {
+        IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
+        IWTON(wton).swapToTONAndTransfer(_sender,_amount);
+
+        emit wtonToTON(_sender,_amount);
+    }
 
     function _needapprove(
         uint256 _amount
@@ -233,7 +273,7 @@ contract SwapperV2 is
         if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
 
         emit exactInputEvent(
-            recipient,
+            sender,
             tokenIn,
             lastTokenOut,
             params.amountIn,

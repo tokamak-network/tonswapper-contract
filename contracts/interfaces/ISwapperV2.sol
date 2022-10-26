@@ -8,7 +8,20 @@ interface ISwapperV2 {
     ///////////////////////////////////////
     /// external function
     //////////////////////////////////////
-    
+
+
+    /**
+     * @dev                TON -> WTON swap
+     * @param _amount      TON amount to be swapped (input ton uint)
+     */
+    function tonToWton(uint256 _amount) external;
+
+    /**
+     * @dev                WTON -> TON swap
+     * @param _amount      WTON amount to be swapped (input wton uint)
+     */
+    function wtonToTon(uint256 _amount) external;
+
     /**
      * @dev
      * @param params            params is swap information (recipient, path, amountIn, minimumAmountOut) More details are in the link. https://docs.uniswap.org/protocol/reference/periphery/interfaces/ISwapRouter

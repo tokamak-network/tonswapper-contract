@@ -95,7 +95,7 @@ async function quoteExactOutput(quoteContract, path, amountOut) {
 describe("Swapper V2", function () {
   before(async () => {
     accounts = await ethers.getSigners();
-    [admin1] = accounts;
+    [admin1,admin2] = accounts;
 
     provider = ethers.provider;
 
@@ -1528,5 +1528,56 @@ describe("Swapper V2", function () {
     const afterBalance = await tosContract.balanceOf(admin1.address);
     expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
   });
+
+  it("approveAndCall: swap TON to WTON", async () => {
+    const amountIn = ethers.utils.parseEther("1");
+    await tonContract.connect(admin1).transfer(admin2.address,amountIn)
+
+    const tonToWTON = true;
+
+    const data = ethers.utils.solidityPack(
+      ["address","bool"],
+      [admin2.address,tonToWTON]
+    );
+    
+    console.log("admin2.address : ",admin2.address);
+
+    const prevBalance = await wtonContract.balanceOf(admin2.address);
+    // console.log("prevBalance :",Number(prevBalance));
+    const tx = await tonContract
+      .connect(admin2)
+      .approveAndCall(swapperV2.address, amountIn, data);
+    await tx.wait();
+
+    const afterBalance = await wtonContract.balanceOf(admin2.address);
+    // console.log("afterBalance :",Number(afterBalance));
+    expect(afterBalance).to.be.gte(prevBalance);
+  })
+
+  it("approveAndCall: swap WTON to TON", async () => {
+    // const amountIn = ethers.utils.parseEther("1");
+    const amountIn = ethers.utils.parseEther("1000000000"); 
+    // let wtonuniAmount = ethers.utils.parseUnits("1", 27);
+
+    const tonToWTON = false;
+
+    const data = ethers.utils.solidityPack(
+      ["address","bool"],
+      [admin2.address,tonToWTON]
+    );
+    
+    console.log("admin2.address : ",admin2.address);
+
+    const prevBalance = await tonContract.balanceOf(admin2.address);
+    // console.log("prevBalance :",Number(prevBalance));
+    const tx = await wtonContract
+      .connect(admin2)
+      .approveAndCall(swapperV2.address, amountIn, data);
+    await tx.wait();
+
+    const afterBalance = await tonContract.balanceOf(admin2.address);
+    // console.log("afterBalance :",Number(afterBalance));
+    expect(afterBalance).to.be.gte(prevBalance);
+  })
 
 });
