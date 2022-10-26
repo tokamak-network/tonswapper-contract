@@ -20,7 +20,6 @@ contract BaseProxy is ProxyAccessCommon, BaseProxyStorage, IProxyEvent, IProxyAc
     constructor () {
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, msg.sender);
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /// @inheritdoc IProxyAction
