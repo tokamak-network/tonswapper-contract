@@ -13,7 +13,7 @@ import "./interfaces/ISwapperV2Event.sol";
 
 import "./SwapperStorage.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract SwapperV2 is
     SwapperStorage,
@@ -36,7 +36,6 @@ contract SwapperV2 is
         "sender is not ton or wton.") ;
 
         uint256 len = data.length;
-        console.log("data.length : %s",len);
         require(len >= 163 || len == 21, "data.length need the 163 over");
         if(len >= 163) {
             bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
@@ -71,10 +70,7 @@ contract SwapperV2 is
             }
         } else if (len == 21) {
             bool tonToWTON = (data.toUint8(len-1) == 0?false:true);
-            console.log("tonToWTON : %s", tonToWTON);
-            console.log("transferAmount : %s", transferAmount);
             address getAddress = data.toAddress(len-21);
-            console.log("getAddress : %s", getAddress);
             if (tonToWTON) {
                 _tonToWTON(getAddress,transferAmount);
             } else {
