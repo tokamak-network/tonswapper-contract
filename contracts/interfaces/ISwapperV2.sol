@@ -26,12 +26,14 @@ interface ISwapperV2 {
      * @dev
      * @param params            params is swap information (recipient, path, amountIn, minimumAmountOut) More details are in the link. https://docs.uniswap.org/protocol/reference/periphery/interfaces/ISwapRouter
      * @param _wrapEth          if input the ETH, _wrapEth is true
+     * @param _outputWrapEth    if output the ETH, _outputWrapEth is true
      * @param _inputWrapWTON    if input the TON, _inputWrapWTON is true
      * @param _outputUnwrapTON  if output get TON, _outputUnwrapTON is true
      */
     function exactInput(
         ISwapRouter.ExactInputParams memory params,
         bool _wrapEth,
+        bool _outputWrapEth,
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )
@@ -43,12 +45,14 @@ interface ISwapperV2 {
      * @dev
      * @param params            params is swap information (recipient, path, amountInMaximum, amountOut) More details are in the link. https://docs.uniswap.org/protocol/reference/periphery/interfaces/ISwapRouter
      * @param _wrapEth          if input the ETH, _wrapEth is true
+     * @param _outputWrapEth    if output the ETH, _outputWrapEth is true
      * @param _inputWrapWTON    if input the TON, _inputWrapWTON is true
      * @param _outputUnwrapTON  if output get TON, _outputUnwrapTON is true
      */
     function exactOutput(
         ISwapRouter.ExactOutputParams memory params,
         bool _wrapEth,
+        bool _outputWrapEth,
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )

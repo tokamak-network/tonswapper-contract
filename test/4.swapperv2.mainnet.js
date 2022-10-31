@@ -203,6 +203,7 @@ describe("Swapper V2", function () {
     );
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = true;
 
@@ -217,7 +218,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -246,6 +247,7 @@ describe("Swapper V2", function () {
     );
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -260,7 +262,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -283,6 +285,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -297,7 +300,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -320,6 +323,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -334,7 +338,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -367,6 +371,7 @@ describe("Swapper V2", function () {
     amountIn = amountIn.div(diff).add(ethers.constants.One).mul(diff);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = true;
     const outputUnwrapTON = false;
 
@@ -385,7 +390,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -410,6 +415,7 @@ describe("Swapper V2", function () {
     amountIn = amountIn.div(diff).add(ethers.constants.One).mul(diff);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = true;
     const outputUnwrapTON = false;
 
@@ -427,7 +433,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -448,6 +454,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -463,7 +470,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -484,6 +491,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -499,7 +507,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -520,6 +528,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -535,7 +544,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -556,6 +565,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = true;
 
@@ -571,7 +581,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -592,6 +602,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -607,7 +618,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -627,6 +638,7 @@ describe("Swapper V2", function () {
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -642,7 +654,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactOutput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -666,6 +678,7 @@ describe("Swapper V2", function () {
     );
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = true;
 
@@ -679,7 +692,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -706,6 +719,7 @@ describe("Swapper V2", function () {
     );
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -719,7 +733,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -739,6 +753,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -752,7 +767,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -772,6 +787,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = true;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -785,7 +801,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON, {
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
         value: amountIn,
       });
 
@@ -805,6 +821,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = true;
     const outputUnwrapTON = false;
 
@@ -823,7 +840,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -841,6 +858,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = true;
     const outputUnwrapTON = false;
 
@@ -859,7 +877,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -877,6 +895,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -892,7 +911,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -910,6 +929,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -925,7 +945,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -943,6 +963,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -958,7 +979,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -976,6 +997,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = true;
 
@@ -992,7 +1014,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -1011,6 +1033,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -1027,7 +1050,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -1045,6 +1068,7 @@ describe("Swapper V2", function () {
     const amountOut = await quoteExactInput(quoter, path, amountIn);
 
     const wrapEth = false;
+    const outputUnwrapEth = false;
     const inputWrapWTON = false;
     const outputUnwrapTON = false;
 
@@ -1061,7 +1085,7 @@ describe("Swapper V2", function () {
 
     const tx = await swapperV2
       .connect(admin1)
-      .exactInput(params, wrapEth, inputWrapWTON, outputUnwrapTON);
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
 
     await tx.wait();
 
@@ -1069,515 +1093,515 @@ describe("Swapper V2", function () {
     expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
   });
 
-  it("TON.approveAndCall:  exactOutput: swap TON to TOS ", async () => {
-    const amountOut = ethers.utils.parseEther("1");
-
-    // ** !! reverse path !!
-    const reversePath = encodePath(
-      [uniswapInfo.tos, uniswapInfo.wton],
-      [FeeAmount.MEDIUM]
-    );
-
-    let amountIn = await quoteExactOutputSingle(
-      quoter,
-      uniswapInfo.wton,
-      uniswapInfo.tos,
-      FeeAmount.MEDIUM,
-      amountOut
-    );
-
-    // 주의할것 !! amountInMaximum 입력값을 조금 크게 보정. (TON, WTON 변환으로 인한 보정 )
-    const diff = ethers.BigNumber.from("1000000000");
-    amountIn = amountIn.div(diff).add(ethers.constants.One).mul(diff);
-
-    const wrapEth = false;
-    const inputWrapWTON = true;
-    const outputUnwrapTON = false;
-
-    const amountInTON = amountIn.div(diff).add(ethers.constants.One);
-    const params = getExactOutputParams(
-      admin1.address,
-      reversePath,
-      amountIn,
-      amountOut
-    );
-    // const selector = Web3EthAbi.encodeFunctionSignature(
-    //   "_exactOutput((bytes,address,uint256,uint256,uint256),bool,bool,bool)"
-    // );
-
-    // console.log("selector", selector);
-    // console.log("params.path", params.path);
-    // console.log("params.recipient", params.recipient);
-    // console.log("params.deadline", params.deadline);
-    // console.log("params.amountOut", params.amountOut.toString());
-    // console.log("params.amountInMaximum", params.amountInMaximum.toString());
-
-    const paramsData = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountOut,
-        params.amountInMaximum,
-      ]
-    );
-    // console.log("wrapEth", wrapEth);
-    // console.log("inputWrapWTON", inputWrapWTON);
-    // console.log("outputUnwrapTON", outputUnwrapTON);
-
-    // bool ExactOutputParams true
-    // bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-    // console.log("data", data);
-
-    const prevBalance = await tosContract.balanceOf(admin1.address);
-
-    const tx = await tonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, amountInTON, data);
-    await tx.wait();
-
-    const afterBalance = await tosContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-    expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
-  });
-
-  it("TON.approveAndCall:  exactOutput: swap TON to AURA ", async () => {
-    const amountOut = ethers.utils.parseEther("1");
-
-    // ** !! reverse path !!
-    const reversePath = encodePath(
-      [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
-      [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-    );
-
-    let amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-
-    // 주의할것 !! amountInMaximum 입력값을 조금 크게 보정. (TON, WTON 변환으로 인한 보정 )
-    const diff = ethers.BigNumber.from("1000000000");
-    amountIn = amountIn.div(diff).add(ethers.constants.One).mul(diff);
-
-    const wrapEth = false;
-    const inputWrapWTON = true;
-    const outputUnwrapTON = false;
-
-    const amountInTON = amountIn.div(diff).add(ethers.constants.One);
-    const params = getExactOutputParams(
-      admin1.address,
-      reversePath,
-      amountIn,
-      amountOut
-    );
-
-    const paramsData = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountOut,
-        params.amountInMaximum,
-      ]
-    );
-    // console.log("wrapEth", wrapEth);
-    // console.log("inputWrapWTON", inputWrapWTON);
-    // console.log("outputUnwrapTON", outputUnwrapTON);
-
-    // bool ExactOutputParams true, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-
-    const prevBalance = await auraContract.balanceOf(admin1.address);
-
-    const tx = await tonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, amountInTON, data);
-    await tx.wait();
-
-    const afterBalance = await auraContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-    expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
-  });
-
-  it("TON.approveAndCall:  exactInput: swap TON to TOS ", async () => {
-    const amountIn = ethers.utils.parseEther("1000000000");
-    const path = encodePath(
-      [uniswapInfo.wton, uniswapInfo.tos],
-      [FeeAmount.MEDIUM]
-    );
-
-    const amountOut = await quoteExactInput(quoter, path, amountIn);
-
-    const wrapEth = false;
-    const inputWrapWTON = true;
-    const outputUnwrapTON = false;
-
-    const diff = ethers.BigNumber.from("1000000000");
-    const amountInTON = amountIn.div(diff);
-
-    const params = getExactInputParams(
-      admin1.address,
-      path,
-      amountIn,
-      amountOut
-    );
-
-    // ISwapRouter.ExactInputParams {
-    //     bytes path;
-    //     address recipient;
-    //     uint256 deadline;
-    //     uint256 amountIn;
-    //     uint256 amountOutMinimum;
-    // }
-    const ExactInputParams = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountIn,
-        params.amountOutMinimum,
-      ]
-    );
-
-    // bool ExactInputParams false
-    // bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-
-    // await tonContract.connect(admin1).approve(swapperV2.address, amountInTON);
-
-    const prevBalance = await tosContract.balanceOf(admin1.address);
-
-    const tx = await tonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, amountInTON, data);
-    await tx.wait();
-
-    const afterBalance = await tosContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-  });
-
-  it("WTON.approveAndCall:  exactInput: swap TON to AURA", async () => {
-    const amountIn = ethers.utils.parseEther("1000000000");
-    const path = encodePath(
-      [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
-      [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-    );
-
-    const amountOut = await quoteExactInput(quoter, path, amountIn);
-
-    const wrapEth = false;
-    const inputWrapWTON = true;
-    const outputUnwrapTON = false;
-
-    const diff = ethers.BigNumber.from("1000000000");
-    const amountInTON = amountIn.div(diff);
-
-    const params = getExactInputParams(
-      admin1.address,
-      path,
-      amountIn,
-      amountOut
-    );
-
-    // ISwapRouter.ExactInputParams {
-    //     bytes path;
-    //     address recipient;
-    //     uint256 deadline;
-    //     uint256 amountIn;
-    //     uint256 amountOutMinimum;
-    // }
-    const ExactInputParams = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountIn,
-        params.amountOutMinimum,
-      ]
-    );
-
-    // bool ExactInputParams false, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-
-    const prevBalance = await auraContract.balanceOf(admin1.address);
-
-    const tx = await tonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, amountInTON, data);
-    await tx.wait();
-
-    const afterBalance = await auraContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-  });
-
-  it("WTON.approveAndCall:  exactOutput: swap WTON to AURA ", async () => {
-    const amountOut = ethers.utils.parseEther("1000");
-
-    // ** !! reverse path !!
-    const reversePath = encodePath(
-      [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
-      [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-    );
-
-    const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-
-    const wrapEth = false;
-    const inputWrapWTON = false;
-    const outputUnwrapTON = false;
-
-    const params = getExactOutputParams(
-      admin1.address,
-      reversePath,
-      amountIn,
-      amountOut
-    );
-
-    const paramsData = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountOut,
-        params.amountInMaximum,
-      ]
-    );
-
-    // bool ExactOutputParams true, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-
-    const prevBalance = await auraContract.balanceOf(admin1.address);
-
-    const tx = await wtonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, params.amountInMaximum, data);
-    await tx.wait();
-
-    const afterBalance = await auraContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-    expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
-  });
-
-  it("WTON.approveAndCall:  exactOutput: swap WTON to TOS ", async () => {
-    const amountOut = ethers.utils.parseEther("1000");
-
-    // ** !! reverse path !!
-    const reversePath = encodePath(
-      [uniswapInfo.tos, uniswapInfo.wton],
-      [FeeAmount.MEDIUM]
-    );
-
-    const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-
-    const wrapEth = false;
-    const inputWrapWTON = false;
-    const outputUnwrapTON = false;
-
-    const params = getExactOutputParams(
-      admin1.address,
-      reversePath,
-      amountIn,
-      amountOut
-    );
-
-    const paramsData = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountOut,
-        params.amountInMaximum,
-      ]
-    );
-
-    // bool ExactOutputParams true, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-
-    const prevBalance = await tosContract.balanceOf(admin1.address);
-
-    const tx = await wtonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, params.amountInMaximum, data);
-    await tx.wait();
-
-    const afterBalance = await tosContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-    expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
-  });
-
-  it("WTON.approveAndCall:  exactInput: swap WTON to AURA ", async () => {
-    const amountIn = ethers.utils.parseEther("1000000000");
-    const path = encodePath(
-      [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
-      [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-    );
-
-    const amountOut = await quoteExactInput(quoter, path, amountIn);
-
-    const wrapEth = false;
-    const inputWrapWTON = false;
-    const outputUnwrapTON = false;
-
-    const params = getExactInputParams(
-      admin1.address,
-      path,
-      amountIn,
-      amountOut
-    );
-
-    // ISwapRouter.ExactInputParams {
-    //     bytes path;
-    //     address recipient;
-    //     uint256 deadline;
-    //     uint256 amountIn;
-    //     uint256 amountOutMinimum;
-    // }
-    const ExactInputParams = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountIn,
-        params.amountOutMinimum,
-      ]
-    );
-
-    // bool ExactInputParams false, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-
-    const prevBalance = await auraContract.balanceOf(admin1.address);
-
-    const tx = await wtonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, amountIn, data);
-    await tx.wait();
-
-    const afterBalance = await auraContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-  });
-
-  it("WTON.approveAndCall:  exactInput: swap WTON to TOS ", async () => {
-    const amountIn = ethers.utils.parseEther("1000000000");
-    const path = encodePath(
-      [uniswapInfo.wton, uniswapInfo.tos],
-      [FeeAmount.MEDIUM]
-    );
-
-    const amountOut = await quoteExactInput(quoter, path, amountIn);
-
-    const wrapEth = false;
-    const inputWrapWTON = false;
-    const outputUnwrapTON = false;
-
-    const params = getExactInputParams(
-      admin1.address,
-      path,
-      amountIn,
-      amountOut
-    );
-
-    const ExactInputParams = ethers.utils.solidityPack(
-      ["bytes", "address", "uint256", "uint256", "uint256"],
-      [
-        params.path,
-        params.recipient,
-        params.deadline,
-        params.amountIn,
-        params.amountOutMinimum,
-      ]
-    );
-
-    // bool ExactInputParams false, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
-    const data = ethers.utils.solidityPack(
-      ["bool", "bytes", "bool", "bool", "bool"],
-      [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
-    );
-
-    const prevBalance = await tosContract.balanceOf(admin1.address);
-
-    const tx = await wtonContract
-      .connect(admin1)
-      .approveAndCall(swapperV2.address, amountIn, data);
-    await tx.wait();
-
-    const afterBalance = await tosContract.balanceOf(admin1.address);
-    expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
-  });
-
-  it("approveAndCall: swap TON to WTON", async () => {
-    const amountIn = ethers.utils.parseEther("1");
-    await tonContract.connect(admin1).transfer(admin2.address,amountIn)
-
-    const tonToWTON = true;
-
-    const data = ethers.utils.solidityPack(
-      ["address","bool"],
-      [admin2.address,tonToWTON]
-    );
+  // it("TON.approveAndCall:  exactOutput: swap TON to TOS ", async () => {
+  //   const amountOut = ethers.utils.parseEther("1");
+
+  //   // ** !! reverse path !!
+  //   const reversePath = encodePath(
+  //     [uniswapInfo.tos, uniswapInfo.wton],
+  //     [FeeAmount.MEDIUM]
+  //   );
+
+  //   let amountIn = await quoteExactOutputSingle(
+  //     quoter,
+  //     uniswapInfo.wton,
+  //     uniswapInfo.tos,
+  //     FeeAmount.MEDIUM,
+  //     amountOut
+  //   );
+
+  //   // 주의할것 !! amountInMaximum 입력값을 조금 크게 보정. (TON, WTON 변환으로 인한 보정 )
+  //   const diff = ethers.BigNumber.from("1000000000");
+  //   amountIn = amountIn.div(diff).add(ethers.constants.One).mul(diff);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = true;
+  //   const outputUnwrapTON = false;
+
+  //   const amountInTON = amountIn.div(diff).add(ethers.constants.One);
+  //   const params = getExactOutputParams(
+  //     admin1.address,
+  //     reversePath,
+  //     amountIn,
+  //     amountOut
+  //   );
+  //   // const selector = Web3EthAbi.encodeFunctionSignature(
+  //   //   "_exactOutput((bytes,address,uint256,uint256,uint256),bool,bool,bool)"
+  //   // );
+
+  //   // console.log("selector", selector);
+  //   // console.log("params.path", params.path);
+  //   // console.log("params.recipient", params.recipient);
+  //   // console.log("params.deadline", params.deadline);
+  //   // console.log("params.amountOut", params.amountOut.toString());
+  //   // console.log("params.amountInMaximum", params.amountInMaximum.toString());
+
+  //   const paramsData = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountOut,
+  //       params.amountInMaximum,
+  //     ]
+  //   );
+  //   // console.log("wrapEth", wrapEth);
+  //   // console.log("inputWrapWTON", inputWrapWTON);
+  //   // console.log("outputUnwrapTON", outputUnwrapTON);
+
+  //   // bool ExactOutputParams true
+  //   // bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+  //   // console.log("data", data);
+
+  //   const prevBalance = await tosContract.balanceOf(admin1.address);
+
+  //   const tx = await tonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, amountInTON, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await tosContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  //   expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
+  // });
+
+  // it("TON.approveAndCall:  exactOutput: swap TON to AURA ", async () => {
+  //   const amountOut = ethers.utils.parseEther("1");
+
+  //   // ** !! reverse path !!
+  //   const reversePath = encodePath(
+  //     [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
+  //     [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //   );
+
+  //   let amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+
+  //   // 주의할것 !! amountInMaximum 입력값을 조금 크게 보정. (TON, WTON 변환으로 인한 보정 )
+  //   const diff = ethers.BigNumber.from("1000000000");
+  //   amountIn = amountIn.div(diff).add(ethers.constants.One).mul(diff);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = true;
+  //   const outputUnwrapTON = false;
+
+  //   const amountInTON = amountIn.div(diff).add(ethers.constants.One);
+  //   const params = getExactOutputParams(
+  //     admin1.address,
+  //     reversePath,
+  //     amountIn,
+  //     amountOut
+  //   );
+
+  //   const paramsData = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountOut,
+  //       params.amountInMaximum,
+  //     ]
+  //   );
+  //   // console.log("wrapEth", wrapEth);
+  //   // console.log("inputWrapWTON", inputWrapWTON);
+  //   // console.log("outputUnwrapTON", outputUnwrapTON);
+
+  //   // bool ExactOutputParams true, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+
+  //   const prevBalance = await auraContract.balanceOf(admin1.address);
+
+  //   const tx = await tonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, amountInTON, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await auraContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  //   expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
+  // });
+
+  // it("TON.approveAndCall:  exactInput: swap TON to TOS ", async () => {
+  //   const amountIn = ethers.utils.parseEther("1000000000");
+  //   const path = encodePath(
+  //     [uniswapInfo.wton, uniswapInfo.tos],
+  //     [FeeAmount.MEDIUM]
+  //   );
+
+  //   const amountOut = await quoteExactInput(quoter, path, amountIn);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = true;
+  //   const outputUnwrapTON = false;
+
+  //   const diff = ethers.BigNumber.from("1000000000");
+  //   const amountInTON = amountIn.div(diff);
+
+  //   const params = getExactInputParams(
+  //     admin1.address,
+  //     path,
+  //     amountIn,
+  //     amountOut
+  //   );
+
+  //   // ISwapRouter.ExactInputParams {
+  //   //     bytes path;
+  //   //     address recipient;
+  //   //     uint256 deadline;
+  //   //     uint256 amountIn;
+  //   //     uint256 amountOutMinimum;
+  //   // }
+  //   const ExactInputParams = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountIn,
+  //       params.amountOutMinimum,
+  //     ]
+  //   );
+
+  //   // bool ExactInputParams false
+  //   // bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+
+  //   // await tonContract.connect(admin1).approve(swapperV2.address, amountInTON);
+
+  //   const prevBalance = await tosContract.balanceOf(admin1.address);
+
+  //   const tx = await tonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, amountInTON, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await tosContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  // });
+
+  // it("WTON.approveAndCall:  exactInput: swap TON to AURA", async () => {
+  //   const amountIn = ethers.utils.parseEther("1000000000");
+  //   const path = encodePath(
+  //     [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
+  //     [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //   );
+
+  //   const amountOut = await quoteExactInput(quoter, path, amountIn);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = true;
+  //   const outputUnwrapTON = false;
+
+  //   const diff = ethers.BigNumber.from("1000000000");
+  //   const amountInTON = amountIn.div(diff);
+
+  //   const params = getExactInputParams(
+  //     admin1.address,
+  //     path,
+  //     amountIn,
+  //     amountOut
+  //   );
+
+  //   // ISwapRouter.ExactInputParams {
+  //   //     bytes path;
+  //   //     address recipient;
+  //   //     uint256 deadline;
+  //   //     uint256 amountIn;
+  //   //     uint256 amountOutMinimum;
+  //   // }
+  //   const ExactInputParams = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountIn,
+  //       params.amountOutMinimum,
+  //     ]
+  //   );
+
+  //   // bool ExactInputParams false, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+
+  //   const prevBalance = await auraContract.balanceOf(admin1.address);
+
+  //   const tx = await tonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, amountInTON, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await auraContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  // });
+
+  // it("WTON.approveAndCall:  exactOutput: swap WTON to AURA ", async () => {
+  //   const amountOut = ethers.utils.parseEther("1000");
+
+  //   // ** !! reverse path !!
+  //   const reversePath = encodePath(
+  //     [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
+  //     [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //   );
+
+  //   const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = false;
+  //   const outputUnwrapTON = false;
+
+  //   const params = getExactOutputParams(
+  //     admin1.address,
+  //     reversePath,
+  //     amountIn,
+  //     amountOut
+  //   );
+
+  //   const paramsData = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountOut,
+  //       params.amountInMaximum,
+  //     ]
+  //   );
+
+  //   // bool ExactOutputParams true, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+
+  //   const prevBalance = await auraContract.balanceOf(admin1.address);
+
+  //   const tx = await wtonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, params.amountInMaximum, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await auraContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  //   expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
+  // });
+
+  // it("WTON.approveAndCall:  exactOutput: swap WTON to TOS ", async () => {
+  //   const amountOut = ethers.utils.parseEther("1000");
+
+  //   // ** !! reverse path !!
+  //   const reversePath = encodePath(
+  //     [uniswapInfo.tos, uniswapInfo.wton],
+  //     [FeeAmount.MEDIUM]
+  //   );
+
+  //   const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = false;
+  //   const outputUnwrapTON = false;
+
+  //   const params = getExactOutputParams(
+  //     admin1.address,
+  //     reversePath,
+  //     amountIn,
+  //     amountOut
+  //   );
+
+  //   const paramsData = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountOut,
+  //       params.amountInMaximum,
+  //     ]
+  //   );
+
+  //   // bool ExactOutputParams true, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [true, paramsData, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+
+  //   const prevBalance = await tosContract.balanceOf(admin1.address);
+
+  //   const tx = await wtonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, params.amountInMaximum, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await tosContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  //   expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
+  // });
+
+  // it("WTON.approveAndCall:  exactInput: swap WTON to AURA ", async () => {
+  //   const amountIn = ethers.utils.parseEther("1000000000");
+  //   const path = encodePath(
+  //     [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
+  //     [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //   );
+
+  //   const amountOut = await quoteExactInput(quoter, path, amountIn);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = false;
+  //   const outputUnwrapTON = false;
+
+  //   const params = getExactInputParams(
+  //     admin1.address,
+  //     path,
+  //     amountIn,
+  //     amountOut
+  //   );
+
+  //   // ISwapRouter.ExactInputParams {
+  //   //     bytes path;
+  //   //     address recipient;
+  //   //     uint256 deadline;
+  //   //     uint256 amountIn;
+  //   //     uint256 amountOutMinimum;
+  //   // }
+  //   const ExactInputParams = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountIn,
+  //       params.amountOutMinimum,
+  //     ]
+  //   );
+
+  //   // bool ExactInputParams false, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+
+  //   const prevBalance = await auraContract.balanceOf(admin1.address);
+
+  //   const tx = await wtonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, amountIn, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await auraContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  // });
+
+  // it("WTON.approveAndCall:  exactInput: swap WTON to TOS ", async () => {
+  //   const amountIn = ethers.utils.parseEther("1000000000");
+  //   const path = encodePath(
+  //     [uniswapInfo.wton, uniswapInfo.tos],
+  //     [FeeAmount.MEDIUM]
+  //   );
+
+  //   const amountOut = await quoteExactInput(quoter, path, amountIn);
+
+  //   const wrapEth = false;
+  //   const inputWrapWTON = false;
+  //   const outputUnwrapTON = false;
+
+  //   const params = getExactInputParams(
+  //     admin1.address,
+  //     path,
+  //     amountIn,
+  //     amountOut
+  //   );
+
+  //   const ExactInputParams = ethers.utils.solidityPack(
+  //     ["bytes", "address", "uint256", "uint256", "uint256"],
+  //     [
+  //       params.path,
+  //       params.recipient,
+  //       params.deadline,
+  //       params.amountIn,
+  //       params.amountOutMinimum,
+  //     ]
+  //   );
+
+  //   // bool ExactInputParams false, bytes params, bool wrapEth, bool inputWrapWTON, bool outputUnwrapTON
+  //   const data = ethers.utils.solidityPack(
+  //     ["bool", "bytes", "bool", "bool", "bool"],
+  //     [false, ExactInputParams, wrapEth, inputWrapWTON, outputUnwrapTON]
+  //   );
+
+  //   const prevBalance = await tosContract.balanceOf(admin1.address);
+
+  //   const tx = await wtonContract
+  //     .connect(admin1)
+  //     .approveAndCall(swapperV2.address, amountIn, data);
+  //   await tx.wait();
+
+  //   const afterBalance = await tosContract.balanceOf(admin1.address);
+  //   expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
+  // });
+
+  // it("approveAndCall: swap TON to WTON", async () => {
+  //   const amountIn = ethers.utils.parseEther("1");
+  //   await tonContract.connect(admin1).transfer(admin2.address,amountIn)
+
+  //   const tonToWTON = true;
+
+  //   const data = ethers.utils.solidityPack(
+  //     ["address","bool"],
+  //     [admin2.address,tonToWTON]
+  //   );
     
-    console.log("admin2.address : ",admin2.address);
+  //   console.log("admin2.address : ",admin2.address);
 
-    const prevBalance = await wtonContract.balanceOf(admin2.address);
-    // console.log("prevBalance :",Number(prevBalance));
-    const tx = await tonContract
-      .connect(admin2)
-      .approveAndCall(swapperV2.address, amountIn, data);
-    await tx.wait();
+  //   const prevBalance = await wtonContract.balanceOf(admin2.address);
+  //   // console.log("prevBalance :",Number(prevBalance));
+  //   const tx = await tonContract
+  //     .connect(admin2)
+  //     .approveAndCall(swapperV2.address, amountIn, data);
+  //   await tx.wait();
 
-    const afterBalance = await wtonContract.balanceOf(admin2.address);
-    // console.log("afterBalance :",Number(afterBalance));
-    expect(afterBalance).to.be.gte(prevBalance);
-  })
+  //   const afterBalance = await wtonContract.balanceOf(admin2.address);
+  //   // console.log("afterBalance :",Number(afterBalance));
+  //   expect(afterBalance).to.be.gte(prevBalance);
+  // })
 
-  it("approveAndCall: swap WTON to TON", async () => {
-    // const amountIn = ethers.utils.parseEther("1");
-    const amountIn = ethers.utils.parseEther("1000000000"); 
-    // let wtonuniAmount = ethers.utils.parseUnits("1", 27);
+  // it("approveAndCall: swap WTON to TON", async () => {
+  //   // const amountIn = ethers.utils.parseEther("1");
+  //   const amountIn = ethers.utils.parseEther("1000000000"); 
+  //   // let wtonuniAmount = ethers.utils.parseUnits("1", 27);
 
-    const tonToWTON = false;
+  //   const tonToWTON = false;
 
-    const data = ethers.utils.solidityPack(
-      ["address","bool"],
-      [admin2.address,tonToWTON]
-    );
+  //   const data = ethers.utils.solidityPack(
+  //     ["address","bool"],
+  //     [admin2.address,tonToWTON]
+  //   );
     
-    console.log("admin2.address : ",admin2.address);
+  //   console.log("admin2.address : ",admin2.address);
 
-    const prevBalance = await tonContract.balanceOf(admin2.address);
-    // console.log("prevBalance :",Number(prevBalance));
-    const tx = await wtonContract
-      .connect(admin2)
-      .approveAndCall(swapperV2.address, amountIn, data);
-    await tx.wait();
+  //   const prevBalance = await tonContract.balanceOf(admin2.address);
+  //   // console.log("prevBalance :",Number(prevBalance));
+  //   const tx = await wtonContract
+  //     .connect(admin2)
+  //     .approveAndCall(swapperV2.address, amountIn, data);
+  //   await tx.wait();
 
-    const afterBalance = await tonContract.balanceOf(admin2.address);
-    // console.log("afterBalance :",Number(afterBalance));
-    expect(afterBalance).to.be.gte(prevBalance);
-  })
+  //   const afterBalance = await tonContract.balanceOf(admin2.address);
+  //   // console.log("afterBalance :",Number(afterBalance));
+  //   expect(afterBalance).to.be.gte(prevBalance);
+  // })
 
 });
