@@ -662,6 +662,121 @@ describe("Swapper V2", function () {
     expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
   });
 
+  it("exactOutput: swap TON to ETH", async () => {
+    const amountOut = ethers.utils.parseEther("1");
+
+    // ** !! reverse path !!
+    const reversePath = encodePath(
+      [uniswapInfo.weth, uniswapInfo.wton],
+      [FeeAmount.MEDIUM]
+    );
+
+    let amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    // console.log("amountIn TON : ", Number(amountIn));
+
+    // 주의할것 !! amountInMaximum 입력값을 조금 크게 보정. (TON, WTON 변환으로 인한 보정 )
+    const diff = ethers.BigNumber.from("1000000000");
+    amountIn = amountIn.div(diff).add(ethers.constants.One).mul(diff);
+
+    const wrapEth = false;
+    const outputUnwrapEth = true;
+    const inputWrapWTON = true;
+    const outputUnwrapTON = false;
+
+    const amountInTON = amountIn.div(diff);
+
+    await tonContract.connect(admin1).approve(swapperV2.address, amountInTON);
+
+    const params = getExactOutputParams(
+      admin1.address,
+      reversePath,
+      amountIn,
+      amountOut
+    );
+    const prevBalance = await provider.getBalance(admin1.address);
+    // console.log("prevBalance ETH : ", Number(prevBalance));
+    const tx = await swapperV2
+      .connect(admin1)
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
+
+    await tx.wait();
+
+    const afterBalance = await await provider.getBalance(admin1.address);
+    // console.log("afterBalance ETH : ", Number(afterBalance));
+    expect(amountOut).to.be.gte(afterBalance.sub(prevBalance));
+    // console.log("1");
+    // expect(amountOut).to.be.eq(afterBalance.sub(prevBalance));
+  });
+
+  it("exactInput: swap ETH to TOS", async () => {
+    const amountIn = ethers.utils.parseEther("1");
+
+    const path = encodePath(
+      [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos],
+      [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+    );
+    
+    const amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+    const wrapEth = true;
+    const outputUnwrapEth = false;
+    const inputWrapWTON = false;
+    const outputUnwrapTON = false;
+    
+    const params = getExactInputParams(
+      admin1.address,
+      path,
+      amountIn,
+      amountOut
+    );
+    
+    const tx = await swapperV2
+      .connect(admin1)
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
+        value: amountIn,
+      });
+    
+    await tx.wait();
+  })
+
+  it("exactOutput: swap TOS to ETH", async () => {
+    const amountOut = ethers.utils.parseEther("0.1");
+
+    // ** !! reverse path !!
+    const reversePath = encodePath(
+      [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos],
+      [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+    );
+
+    let amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+
+    const wrapEth = false;
+    const outputUnwrapEth = true;
+    const inputWrapWTON = false;
+    const outputUnwrapTON = false;
+
+
+    await tosContract.connect(admin1).approve(swapperV2.address, amountIn);
+
+    const params = getExactOutputParams(
+      admin1.address,
+      reversePath,
+      amountIn,
+      amountOut
+    );
+    const prevBalance = await provider.getBalance(admin1.address);
+    console.log("prevBalance ETH : ", Number(prevBalance));
+    const tx = await swapperV2
+      .connect(admin1)
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
+
+    await tx.wait();
+
+    const afterBalance = await await provider.getBalance(admin1.address);
+    console.log("afterBalance ETH : ", Number(afterBalance));
+    expect(amountOut).to.be.gte(afterBalance.sub(prevBalance));
+  });
+
   it("exactInput: swap ETH to TON ", async () => {
     const amountIn = ethers.utils.parseEther("1");
     const path = encodePath(
@@ -1092,6 +1207,80 @@ describe("Swapper V2", function () {
     const afterBalance = await tosContract.balanceOf(admin1.address);
     expect(afterBalance).to.be.gte(prevBalance.add(amountOut));
   });
+
+  it("exactInput: swap TON to ETH", async () => {
+    const amountIn = ethers.utils.parseEther("100");
+    const path = encodePath(
+      [uniswapInfo.wton, uniswapInfo.weth],
+      [FeeAmount.MEDIUM]
+    );
+
+    const amountOut = await quoteExactInput(quoter, path, amountIn);
+
+    const wrapEth = false;
+    const outputUnwrapEth = true;
+    const inputWrapWTON = true;
+    const outputUnwrapTON = false;
+
+    await tonContract.connect(admin1).approve(swapperV2.address, amountIn);
+
+    const params = getExactInputParams(
+      admin1.address,
+      path,
+      amountIn,
+      amountOut
+    );
+
+    const prevBalance = await provider.getBalance(admin1.address);
+    console.log("prevBalance ETH : ", Number(prevBalance));
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
+
+    await tx.wait();
+
+    const afterBalance = await await provider.getBalance(admin1.address);
+    console.log("afterBalance ETH : ", Number(afterBalance));
+    expect(amountOut).to.be.gte(afterBalance.sub(prevBalance));
+  })
+
+  it("exactInput: swap TOS to ETH", async () => {
+    const amountIn = ethers.utils.parseEther("100");
+    const path = encodePath(
+      [uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
+      [FeeAmount.MEDIUM,FeeAmount.MEDIUM]
+    );
+
+    const amountOut = await quoteExactInput(quoter, path, amountIn);
+
+    const wrapEth = false;
+    const outputUnwrapEth = true;
+    const inputWrapWTON = false;
+    const outputUnwrapTON = false;
+
+    await tosContract.connect(admin1).approve(swapperV2.address, amountIn);
+
+    const params = getExactInputParams(
+      admin1.address,
+      path,
+      amountIn,
+      amountOut
+    );
+
+    const prevBalance = await provider.getBalance(admin1.address);
+    console.log("prevBalance ETH : ", Number(prevBalance));
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
+
+    await tx.wait();
+
+    const afterBalance = await await provider.getBalance(admin1.address);
+    console.log("afterBalance ETH : ", Number(afterBalance));
+    expect(amountOut).to.be.gte(afterBalance.sub(prevBalance));
+  })
 
   // it("TON.approveAndCall:  exactOutput: swap TON to TOS ", async () => {
   //   const amountOut = ethers.utils.parseEther("1");

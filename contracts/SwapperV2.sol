@@ -13,7 +13,7 @@ import "./interfaces/ISwapperV2Event.sol";
 
 import "./SwapperStorage.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract SwapperV2 is
     SwapperStorage,
@@ -138,6 +138,8 @@ contract SwapperV2 is
             _outputUnwrapTON
         );
     }
+
+    receive() external payable {}
 
     /* internal function */
 
@@ -298,7 +300,8 @@ contract SwapperV2 is
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )
-        internal
+        public
+        payable
         returns (uint256 amountIn)
     {
         require(params.recipient == sender, "recipient is not sender");
@@ -314,7 +317,10 @@ contract SwapperV2 is
         );
 
         address recipient = params.recipient;
-        if (_outputUnwrapTON || _outputUnwrapEth) recipient = address(this);
+        if (_outputUnwrapTON || _outputUnwrapEth) {
+            console.log("0");
+            recipient = address(this);
+        }
 
         if (IERC20(tokenIn).allowance(address(this), address(uniswapRouter)) < params.amountInMaximum ){
             IERC20(tokenIn).approve(address(uniswapRouter), params.amountInMaximum);
@@ -322,6 +328,7 @@ contract SwapperV2 is
 
         if (numPools == 1) {
             if (_inputWrapWTON) params.amountInMaximum = (params.amountInMaximum / 1e9) * 1e9;
+            console.log("1");
             ISwapRouter.ExactOutputSingleParams memory param =
                 ISwapRouter.ExactOutputSingleParams({
                     tokenIn: tokenIn,
@@ -345,16 +352,17 @@ contract SwapperV2 is
 
         if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, params.amountOut);
 
+        uint256 amountOut1 = params.amountOut;
+
         if (_outputUnwrapEth) {
             require(lastTokenOut == address(_WETH), "tokenOut is not WETH");
             address payable getAddr = payable(sender);
-            _WETH.withdraw(params.amountOut);
-            getAddr.transfer(params.amountOut);
+            _WETH.withdraw(amountOut1);
+            getAddr.transfer(amountOut1);
         }
 
-        uint256 refund;
-        uint256 amountOut1 = params.amountOut;
         address sender1 = sender;
+        uint256 refund;
         if (amountIn < params.amountInMaximum) {
             refund = params.amountInMaximum - amountIn;
             if(_wrapEth) {
