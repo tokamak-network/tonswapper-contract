@@ -333,7 +333,6 @@ contract SwapperV2 is
         if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, params.amountOut);
         uint256 refund;
         uint256 amountOut1 = params.amountOut;
-        sender = sender;
         if (amountIn < params.amountInMaximum) {
             refund = params.amountInMaximum - amountIn;
             IERC20(tokenIn).transfer(sender, refund);
