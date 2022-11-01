@@ -13,7 +13,7 @@ import "./interfaces/ISwapperV2Event.sol";
 
 import "./SwapperStorage.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract SwapperV2 is
     SwapperStorage,
@@ -36,16 +36,14 @@ contract SwapperV2 is
         "sender is not ton or wton.") ;
 
         uint256 len = data.length;
-        console.log("approveAndCall len : %s", len);
-        require(len >= 163 || len == 21, "data.length need the 163 over");
-        if(len >= 163) {
+        require(len >= 164 || len == 21, "data.length need the 163 over");
+        if(len >= 164) {
             bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
             bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
             bool outputUnwrapEthbool = (data.toUint8(len-3) == 0?false:true);
             bool wrapEthbool = (data.toUint8(len-4) == 0?false:true);
             bytes memory paramsData = data.slice(1, len-4);
             uint256 paramsDataLen = paramsData.length;
-            console.log("paramsDataLen : %s", paramsDataLen);
 
             if (data.toUint8(0) > 0) {
                 ISwapRouter.ExactOutputParams memory param =
