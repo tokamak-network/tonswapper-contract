@@ -26,60 +26,63 @@ contract SwapperV2 is
 
     /* approveAndCall function */
 
-    // function onApprove(
-    //     address sender,
-    //     address spender,
-    //     uint256 transferAmount,
-    //     bytes calldata data
-    // ) external returns (bool) {
-    //     require(msg.sender == address(ton) || msg.sender == address(wton),
-    //     "sender is not ton or wton.") ;
+    function onApprove(
+        address sender,
+        address spender,
+        uint256 transferAmount,
+        bytes calldata data
+    ) external returns (bool) {
+        require(msg.sender == address(ton) || msg.sender == address(wton),
+        "sender is not ton or wton.") ;
 
-    //     uint256 len = data.length;
-    //     require(len >= 163 || len == 21, "data.length need the 163 over");
-    //     if(len >= 163) {
-    //         bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
-    //         bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
-    //         bool wrapEthbool = (data.toUint8(len-3) == 0?false:true);
-    //         bytes memory paramsData = data.slice(1, len-3);
-    //         uint256 paramsDataLen = paramsData.length;
+        uint256 len = data.length;
+        console.log("approveAndCall len : %s", len);
+        require(len >= 163 || len == 21, "data.length need the 163 over");
+        if(len >= 163) {
+            bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
+            bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
+            bool outputUnwrapEthbool = (data.toUint8(len-3) == 0?false:true);
+            bool wrapEthbool = (data.toUint8(len-4) == 0?false:true);
+            bytes memory paramsData = data.slice(1, len-4);
+            uint256 paramsDataLen = paramsData.length;
+            console.log("paramsDataLen : %s", paramsDataLen);
 
-    //         if (data.toUint8(0) > 0) {
-    //             ISwapRouter.ExactOutputParams memory param =
-    //                 ISwapRouter.ExactOutputParams({
-    //                     path: paramsData.slice(0, paramsDataLen-116-1),
-    //                     recipient: paramsData.toAddress(paramsDataLen-116-1),
-    //                     deadline: block.timestamp,
-    //                     amountOut: paramsData.toUint256(paramsDataLen-64-1),
-    //                     amountInMaximum: paramsData.toUint256(paramsDataLen-32-1)
-    //                 });
+            if (data.toUint8(0) > 0) {
+                ISwapRouter.ExactOutputParams memory param =
+                    ISwapRouter.ExactOutputParams({
+                        path: paramsData.slice(0, paramsDataLen-116-1),
+                        recipient: paramsData.toAddress(paramsDataLen-116-1),
+                        deadline: block.timestamp,
+                        amountOut: paramsData.toUint256(paramsDataLen-64-1),
+                        amountInMaximum: paramsData.toUint256(paramsDataLen-32-1)
+                    });
 
-    //             _exactOutput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+                _exactOutput(sender, param, wrapEthbool, outputUnwrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
 
-    //         } else {
-    //             ISwapRouter.ExactInputParams memory param =
-    //                 ISwapRouter.ExactInputParams({
-    //                     path: paramsData.slice(0, paramsDataLen-116-1),
-    //                     recipient: paramsData.toAddress(paramsDataLen-116-1),
-    //                     deadline: block.timestamp,
-    //                     amountIn: paramsData.toUint256(paramsDataLen-64-1),
-    //                     amountOutMinimum: paramsData.toUint256(paramsDataLen-32-1)
-    //                 });
+            } else {
+                ISwapRouter.ExactInputParams memory param =
+                    ISwapRouter.ExactInputParams({
+                        path: paramsData.slice(0, paramsDataLen-116-1),
+                        recipient: paramsData.toAddress(paramsDataLen-116-1),
+                        deadline: block.timestamp,
+                        amountIn: paramsData.toUint256(paramsDataLen-64-1),
+                        amountOutMinimum: paramsData.toUint256(paramsDataLen-32-1)
+                    });
 
-    //             _exactInput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
-    //         }
-    //     } else if (len == 21) {
-    //         bool tonToWTON = (data.toUint8(len-1) == 0?false:true);
-    //         address getAddress = data.toAddress(len-21);
-    //         if (tonToWTON) {
-    //             _tonToWTON(getAddress,transferAmount);
-    //         } else {
-    //             _wtonToTON(getAddress,transferAmount);
-    //         }
-    //     }
+                _exactInput(sender, param, wrapEthbool, outputUnwrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+            }
+        } else if (len == 21) {
+            bool tonToWTON = (data.toUint8(len-1) == 0?false:true);
+            address getAddress = data.toAddress(len-21);
+            if (tonToWTON) {
+                _tonToWTON(getAddress,transferAmount);
+            } else {
+                _wtonToTON(getAddress,transferAmount);
+            }
+        }
 
-    //     return true;
-    // }
+        return true;
+    }
 
     /* external function */
 
@@ -318,7 +321,6 @@ contract SwapperV2 is
 
         address recipient = params.recipient;
         if (_outputUnwrapTON || _outputUnwrapEth) {
-            console.log("0");
             recipient = address(this);
         }
 
@@ -328,7 +330,6 @@ contract SwapperV2 is
 
         if (numPools == 1) {
             if (_inputWrapWTON) params.amountInMaximum = (params.amountInMaximum / 1e9) * 1e9;
-            console.log("1");
             ISwapRouter.ExactOutputSingleParams memory param =
                 ISwapRouter.ExactOutputSingleParams({
                     tokenIn: tokenIn,
