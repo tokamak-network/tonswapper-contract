@@ -358,7 +358,7 @@ contract SwapperV2 is
                 _WETH.withdraw(refund);
                 payable(sender1).transfer(refund);
             } else {
-                IERC20(tokenIn).transfer(sender1, refund);
+                IERC20(tokenIn).safeTransfer(sender1, refund);
             }
         }
 
