@@ -196,19 +196,16 @@ contract SwapperV2 is
         require(tokenIn != tokenOut, "same tokenIn , tokenOut");
 
         if (_wrapEth) require(tokenIn == address(_WETH), "tokenIn is not WETH");
+        else if (_inputWrapWTON) require(tokenIn == address(wton), "tokenIn is not WTON");
+        
         if (_outputUnwrapEth) require(lastTokenOut == address(_WETH), "tokenOut is not WETH");
-        if (_inputWrapWTON) require(tokenIn == address(wton), "tokenIn is not WTON");
-
-        if (_outputUnwrapTON) {
-            require(lastTokenOut == address(wton), "tokenOut is not WTON");  
-        }
+        else if (_outputUnwrapTON) require(lastTokenOut == address(wton), "tokenOut is not WTON");  
 
         if (_wrapEth) {
             require(msg.value == amountIn, "wrong msg.value");
             _WETH.deposit{value: amountIn}();
         } else {
             require(msg.value == 0, "msg.value should be 0");
-
             if (_inputWrapWTON) {
                 require(amountIn == (amountIn/1e9*1e9), "amountIn need wton uint");
                 uint256 tonAmount = amountIn / 1e9;
