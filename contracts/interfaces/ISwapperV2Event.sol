@@ -6,12 +6,12 @@ interface ISwapperV2Event {
     /// @dev                     TON -> WTON
     /// @param recipient         recipient Address
     /// @param amount            swapped ton amount
-    event tonToWTON(address recipient, uint256 amount);
+    event TonToWTON(address recipient, uint256 amount);
 
     /// @dev                     WTON -> TON
     /// @param recipient         recipient Address
     /// @param amount            swapped wton amount
-    event wtonToTON(address recipient, uint256 amount);
+    event WtonToTON(address recipient, uint256 amount);
 
     /// @dev                     exactInput token swap
     /// @param recipient         recipient Address
@@ -19,7 +19,7 @@ interface ISwapperV2Event {
     /// @param outputToken       output Address
     /// @param amountIn          amountIn
     /// @param amountOut         amountOut
-    event exactInputEvent(
+    event ExactInputEvent(
         address recipient,
         address inputToken,
         address outputToken,
@@ -34,7 +34,7 @@ interface ISwapperV2Event {
     /// @param amountOut         amountOut
     /// @param amountIn          amountIn
     /// @param refund            refund amount(amountInMaximum - amountIn)
-    event exactOutputEvent(
+    event ExactOutputEvent(
         address recipient,
         address inputToken,
         address outputToken,

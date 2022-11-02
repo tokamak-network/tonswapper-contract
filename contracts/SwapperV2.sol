@@ -149,7 +149,7 @@ contract SwapperV2 is
         IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
         IWTON(wton).swapFromTONAndTransfer(_sender,_amount);
 
-        emit tonToWTON(_sender,_amount);
+        emit TonToWTON(_sender,_amount);
     }
 
     // _amount is wton uint
@@ -157,7 +157,7 @@ contract SwapperV2 is
         IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
         IWTON(wton).swapToTONAndTransfer(_sender,_amount);
 
-        emit wtonToTON(_sender,_amount);
+        emit WtonToTON(_sender,_amount);
     }
 
     function _needapprove(
@@ -283,7 +283,7 @@ contract SwapperV2 is
             getAddr.transfer(amountOut);
         }
 
-        emit exactInputEvent(
+        emit ExactInputEvent(
             sender,
             tokenIn,
             lastTokenOut,
@@ -374,7 +374,7 @@ contract SwapperV2 is
             }
         }
 
-        emit exactOutputEvent(
+        emit ExactOutputEvent(
             sender1,
             tokenIn,
             lastTokenOut,
