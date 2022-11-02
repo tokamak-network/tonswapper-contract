@@ -176,6 +176,7 @@ contract SwapperV2 is
         bytes memory path,
         uint256 amountIn,
         bool _wrapEth,
+        bool _outputUnwrapEth,
         bool _inputWrapWTON,
         bool _outputUnwrapTON,
         bool _reversePath
@@ -198,6 +199,7 @@ contract SwapperV2 is
         require(tokenIn != tokenOut, "same tokenIn , tokenOut");
 
         if (_wrapEth) require(tokenIn == address(_WETH), "tokenIn is not WETH");
+        if (_outputUnwrapEth) require(lastTokenOut == address(_WETH), "tokenOut is not WETH");
         if (_inputWrapWTON) require(tokenIn == address(wton), "tokenIn is not WTON");
 
         if (_outputUnwrapTON && numPools == 1) {
@@ -242,10 +244,11 @@ contract SwapperV2 is
             params.path,
             params.amountIn,
             _wrapEth,
+            _outputUnwrapEth,
             _inputWrapWTON,
             _outputUnwrapTON,
             false
-            );
+        );
 
         address recipient = params.recipient;
         if (_outputUnwrapTON || _outputUnwrapEth) recipient = address(this);
@@ -275,7 +278,6 @@ contract SwapperV2 is
         if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
 
         if (_outputUnwrapEth) {
-            require(lastTokenOut == address(_WETH), "tokenOut is not WETH");
             address payable getAddr = payable(sender);
             _WETH.withdraw(amountOut);
             getAddr.transfer(amountOut);
@@ -310,6 +312,7 @@ contract SwapperV2 is
             params.path,
             params.amountInMaximum,
             _wrapEth,
+            _outputUnwrapEth,
             _inputWrapWTON,
             _outputUnwrapTON,
             true
@@ -352,7 +355,6 @@ contract SwapperV2 is
         uint256 amountOut1 = params.amountOut;
 
         if (_outputUnwrapEth) {
-            require(lastTokenOut == address(_WETH), "tokenOut is not WETH");
             address payable getAddr = payable(sender);
             _WETH.withdraw(amountOut1);
             getAddr.transfer(amountOut1);
