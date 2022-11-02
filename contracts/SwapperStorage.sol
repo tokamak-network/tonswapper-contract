@@ -12,11 +12,6 @@ contract SwapperStorage  {
     address public tos;             //decimal = 18 (WAD)
 
     IWETH public _WETH;
-
-    uint24 public constant poolFee = 3000;
-
+    
     ISwapRouter public uniswapRouter;
-
-    // IQuoter v3Quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);     //mainnet
-
 }

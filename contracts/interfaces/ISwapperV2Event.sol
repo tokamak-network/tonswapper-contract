@@ -3,6 +3,16 @@ pragma solidity ^0.8.12;
 
 interface ISwapperV2Event {
 
+    /// @dev                     TON -> WTON
+    /// @param recipient         recipient Address
+    /// @param amount            swapped ton amount
+    event tonToWTON(address recipient, uint256 amount);
+
+    /// @dev                     WTON -> TON
+    /// @param recipient         recipient Address
+    /// @param amount            swapped wton amount
+    event wtonToTON(address recipient, uint256 amount);
+
     /// @dev                     exactInput token swap
     /// @param recipient         recipient Address
     /// @param inputToken        input Address

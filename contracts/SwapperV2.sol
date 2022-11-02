@@ -13,13 +13,10 @@ import "./interfaces/ISwapperV2Event.sol";
 
 import "./SwapperStorage.sol";
 
-import { ERC165Storage } from "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
-
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract SwapperV2 is
-    SwapperStorage, 
-    ERC165Storage,
+    SwapperStorage,
     ISwapperV2,
     ISwapperV2Event
 {
@@ -38,37 +35,48 @@ contract SwapperV2 is
         require(msg.sender == address(ton) || msg.sender == address(wton),
         "sender is not ton or wton.") ;
 
-        // address user = sender;
         uint256 len = data.length;
-        bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
-        bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
-        bool wrapEthbool = (data.toUint8(len-3) == 0?false:true);
-        bytes memory paramsData = data.slice(1, len-3);
-        uint256 paramsDataLen = paramsData.length;
+        require(len >= 164 || len == 21, "data.length need the 163 over");
+        if(len >= 164) {
+            bool outputUnwrapTONbool = (data.toUint8(len-1) == 0?false:true);
+            bool inputWrapWTONbool = (data.toUint8(len-2) == 0?false:true);
+            bool outputUnwrapEthbool = (data.toUint8(len-3) == 0?false:true);
+            bool wrapEthbool = (data.toUint8(len-4) == 0?false:true);
+            bytes memory paramsData = data.slice(1, len-4);
+            uint256 paramsDataLen = paramsData.length;
 
-        if (data.toUint8(0) > 0) {
-            ISwapRouter.ExactOutputParams memory param =
-                ISwapRouter.ExactOutputParams({
-                    path: paramsData.slice(0, paramsDataLen-116-1),
-                    recipient: paramsData.toAddress(paramsDataLen-116-1),
-                    deadline: block.timestamp,
-                    amountOut: paramsData.toUint256(paramsDataLen-64-1),
-                    amountInMaximum: paramsData.toUint256(paramsDataLen-32-1)
-                });
+            if (data.toUint8(0) > 0) {
+                ISwapRouter.ExactOutputParams memory param =
+                    ISwapRouter.ExactOutputParams({
+                        path: paramsData.slice(0, paramsDataLen-116-1),
+                        recipient: paramsData.toAddress(paramsDataLen-116-1),
+                        deadline: block.timestamp,
+                        amountOut: paramsData.toUint256(paramsDataLen-64-1),
+                        amountInMaximum: paramsData.toUint256(paramsDataLen-32-1)
+                    });
 
-            _exactOutput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+                _exactOutput(sender, param, wrapEthbool, outputUnwrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
 
-        } else {
-            ISwapRouter.ExactInputParams memory param =
-                ISwapRouter.ExactInputParams({
-                    path: paramsData.slice(0, paramsDataLen-116-1),
-                    recipient: paramsData.toAddress(paramsDataLen-116-1),
-                    deadline: block.timestamp,
-                    amountIn: paramsData.toUint256(paramsDataLen-64-1),
-                    amountOutMinimum: paramsData.toUint256(paramsDataLen-32-1)
-                });
+            } else {
+                ISwapRouter.ExactInputParams memory param =
+                    ISwapRouter.ExactInputParams({
+                        path: paramsData.slice(0, paramsDataLen-116-1),
+                        recipient: paramsData.toAddress(paramsDataLen-116-1),
+                        deadline: block.timestamp,
+                        amountIn: paramsData.toUint256(paramsDataLen-64-1),
+                        amountOutMinimum: paramsData.toUint256(paramsDataLen-32-1)
+                    });
 
-            _exactInput(sender, param, wrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+                _exactInput(sender, param, wrapEthbool, outputUnwrapEthbool, inputWrapWTONbool, outputUnwrapTONbool);
+            }
+        } else if (len == 21) {
+            bool tonToWTON = (data.toUint8(len-1) == 0?false:true);
+            address getAddress = data.toAddress(len-21);
+            if (tonToWTON) {
+                _tonToWTON(getAddress,transferAmount);
+            } else {
+                _wtonToTON(getAddress,transferAmount);
+            }
         }
 
         return true;
@@ -77,9 +85,20 @@ contract SwapperV2 is
     /* external function */
 
     /// @inheritdoc ISwapperV2
+    function tonToWton(uint256 _amount) external override {
+        _tonToWTON(msg.sender,_amount);
+    }
+
+    /// @inheritdoc ISwapperV2
+    function wtonToTon(uint256 _amount) external override {
+        _wtonToTON(msg.sender,_amount);
+    }
+
+    /// @inheritdoc ISwapperV2
     function exactInput(
         ISwapRouter.ExactInputParams memory params,
         bool _wrapEth,
+        bool _outputUnwrapEth,
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )
@@ -92,6 +111,7 @@ contract SwapperV2 is
             msg.sender,
             params,
             _wrapEth,
+            _outputUnwrapEth,
             _inputWrapWTON,
             _outputUnwrapTON
         );
@@ -101,6 +121,7 @@ contract SwapperV2 is
     function exactOutput(
         ISwapRouter.ExactOutputParams memory params,
         bool _wrapEth,
+        bool _outputUnwrapEth,
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )
@@ -113,12 +134,31 @@ contract SwapperV2 is
             msg.sender,
             params,
             _wrapEth,
+            _outputUnwrapEth,
             _inputWrapWTON,
             _outputUnwrapTON
         );
     }
 
+    receive() external payable {}
+
     /* internal function */
+
+    function _tonToWTON(address _sender, uint256 _amount) internal {
+        _needapprove(_amount);
+        IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
+        IWTON(wton).swapFromTONAndTransfer(_sender,_amount);
+
+        emit tonToWTON(_sender,_amount);
+    }
+
+    // _amount is wton uint
+    function _wtonToTON(address _sender, uint256 _amount) internal {
+        IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
+        IWTON(wton).swapToTONAndTransfer(_sender,_amount);
+
+        emit wtonToTON(_sender,_amount);
+    }
 
     function _needapprove(
         uint256 _amount
@@ -165,12 +205,7 @@ contract SwapperV2 is
         if (_outputUnwrapTON && numPools == 1) {
             require(tokenOut == address(wton), "tokenOut is not WTON");
         } else if (_outputUnwrapTON) {
-            if (_reversePath) {
-                require(lastTokenOut == address(wton), "tokenOut is not WTON");
-            } else {
-                require(lastTokenOut == address(wton), "tokenOut is not WTON");
-            }
-
+            require(lastTokenOut == address(wton), "tokenOut is not WTON");
         }
 
         if (_wrapEth) {
@@ -195,6 +230,7 @@ contract SwapperV2 is
         address sender,
         ISwapRouter.ExactInputParams memory params,
         bool _wrapEth,
+        bool _outputUnwrapEth,
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )
@@ -214,7 +250,7 @@ contract SwapperV2 is
             );
 
         address recipient = params.recipient;
-        if (_outputUnwrapTON) recipient = address(this);
+        if (_outputUnwrapTON || _outputUnwrapEth) recipient = address(this);
 
         IERC20(tokenIn).approve(address(uniswapRouter), params.amountIn);
 
@@ -232,19 +268,23 @@ contract SwapperV2 is
                 });
 
             amountOut = ISwapRouter(uniswapRouter).exactInputSingle(param);
-
-            if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
-
         } else {
             params.recipient = recipient;
             params.deadline = block.timestamp + 12;
             amountOut = ISwapRouter(uniswapRouter).exactInput(params);
+        }
 
-            if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
+        if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
+
+        if (_outputUnwrapEth) {
+            require(lastTokenOut == address(_WETH), "tokenOut is not WETH");
+            address payable getAddr = payable(sender);
+            _WETH.withdraw(amountOut);
+            getAddr.transfer(amountOut);
         }
 
         emit exactInputEvent(
-            recipient,
+            sender,
             tokenIn,
             lastTokenOut,
             params.amountIn,
@@ -257,10 +297,12 @@ contract SwapperV2 is
         address sender,
         ISwapRouter.ExactOutputParams memory params,
         bool _wrapEth,
+        bool _outputUnwrapEth,
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )
-        internal
+        public
+        payable
         returns (uint256 amountIn)
     {
         require(params.recipient == sender, "recipient is not sender");
@@ -276,7 +318,9 @@ contract SwapperV2 is
         );
 
         address recipient = params.recipient;
-        if (_outputUnwrapTON) recipient = address(this);
+        if (_outputUnwrapTON || _outputUnwrapEth) {
+            recipient = address(this);
+        }
 
         if (IERC20(tokenIn).allowance(address(this), address(uniswapRouter)) < params.amountInMaximum ){
             IERC20(tokenIn).approve(address(uniswapRouter), params.amountInMaximum);
@@ -306,16 +350,32 @@ contract SwapperV2 is
         }
 
         if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, params.amountOut);
-        uint256 refund;
+
         uint256 amountOut1 = params.amountOut;
-        sender = sender;
+
+        if (_outputUnwrapEth) {
+            require(lastTokenOut == address(_WETH), "tokenOut is not WETH");
+            address payable getAddr = payable(sender);
+            _WETH.withdraw(amountOut1);
+            getAddr.transfer(amountOut1);
+        }
+
+        address sender1 = sender;
+        uint256 refund;
         if (amountIn < params.amountInMaximum) {
             refund = params.amountInMaximum - amountIn;
-            IERC20(tokenIn).transfer(sender, refund);
+            if(_wrapEth) {
+                require(tokenIn == address(_WETH), "tokenIn is not ETH");
+                address payable getAddr = payable(sender1);
+                _WETH.withdraw(refund);
+                getAddr.transfer(refund);
+            } else {
+                IERC20(tokenIn).transfer(sender1, refund);
+            }
         }
 
         emit exactOutputEvent(
-            recipient,
+            sender1,
             tokenIn,
             lastTokenOut,
             amountIn,

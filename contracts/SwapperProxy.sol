@@ -31,7 +31,6 @@ contract SwapperProxy is
     )
         external onlyOwner
     {
-        require(address(tos) == address(0), "already initialized.");
         wton = _wton;
         ton = _ton;
         tos = _tos;

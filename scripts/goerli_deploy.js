@@ -24,7 +24,7 @@ async function main() {
   let uniswapRouter = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
   let wethAddress = "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
 
-  const tonSwapperFactory = await hre.ethers.getContractFactory("Swapper");
+  const tonSwapperFactory = await hre.ethers.getContractFactory("SwapperV2");
   tonSwapperLogic = await tonSwapperFactory.deploy(
   );
   await tonSwapperLogic.deployed();
