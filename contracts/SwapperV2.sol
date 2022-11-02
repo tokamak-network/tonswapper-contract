@@ -145,7 +145,7 @@ contract SwapperV2 is
     function _tonToWTON(address _sender, uint256 _amount) internal {
         _needapprove(_amount);
         IERC20(ton).safeTransferFrom(_sender,address(this), _amount);
-        IWTON(wton).swapFromTONAndTransfer(_sender,_amount);
+        require(IWTON(wton).swapFromTONAndTransfer(_sender,_amount),"wton swapFromTONAndTransfer fail");
 
         emit TonToWTON(_sender,_amount);
     }
@@ -153,7 +153,7 @@ contract SwapperV2 is
     // _amount is wton uint
     function _wtonToTON(address _sender, uint256 _amount) internal {
         IERC20(wton).safeTransferFrom(_sender,address(this),_amount);
-        IWTON(wton).swapToTONAndTransfer(_sender,_amount);
+        require(IWTON(wton).swapToTONAndTransfer(_sender,_amount),"wton swapToTONAndTransfer fail");
 
         emit WtonToTON(_sender,_amount);
     }
@@ -164,10 +164,7 @@ contract SwapperV2 is
         internal
     {
         if(IERC20(ton).allowance(address(this), wton) < _amount) {
-            IERC20(ton).approve(
-                wton,
-                type(uint256).max
-            );
+            require(IERC20(ton).approve(wton,type(uint256).max), "ton approve fail");
         }
     }
 
@@ -253,7 +250,7 @@ contract SwapperV2 is
         address recipient = params.recipient;
         if (_outputUnwrapTON || _outputUnwrapEth) recipient = address(this);
 
-        IERC20(tokenIn).approve(address(uniswapRouter), params.amountIn);
+        require(IERC20(tokenIn).approve(address(uniswapRouter), params.amountIn), "approve fail");
 
         if (numPools == 1) {
             ISwapRouter.ExactInputSingleParams memory param =
@@ -275,7 +272,7 @@ contract SwapperV2 is
             amountOut = ISwapRouter(uniswapRouter).exactInput(params);
         }
 
-        if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
+        if (_outputUnwrapTON) require(IWTON(wton).swapToTONAndTransfer(sender, amountOut),"wton swapToTONAndTransfer fail");
 
         if (_outputUnwrapEth) {
             _WETH.withdraw(amountOut);
@@ -323,7 +320,7 @@ contract SwapperV2 is
         }
 
         if (IERC20(tokenIn).allowance(address(this), address(uniswapRouter)) < params.amountInMaximum ){
-            IERC20(tokenIn).approve(address(uniswapRouter), params.amountInMaximum);
+            require(IERC20(tokenIn).approve(address(uniswapRouter), params.amountInMaximum), "approve fail");
         }
 
         if (numPools == 1) {
@@ -349,7 +346,7 @@ contract SwapperV2 is
             amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
         }
 
-        if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, params.amountOut);
+        if (_outputUnwrapTON) require(IWTON(wton).swapToTONAndTransfer(sender, params.amountOut),"wton swapToTONAndTransfer fail");
 
         uint256 amountOut1 = params.amountOut;
 
