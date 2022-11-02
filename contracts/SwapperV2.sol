@@ -272,13 +272,13 @@ contract SwapperV2 is
             amountOut = ISwapRouter(uniswapRouter).exactInput(params);
         }
 
-        if (_outputUnwrapTON) require(IWTON(wton).swapToTONAndTransfer(sender, amountOut),"wton swapToTONAndTransfer fail");
-
-        if (_outputUnwrapEth) {
+        if (_outputUnwrapTON) {
+            require(IWTON(wton).swapToTONAndTransfer(sender, amountOut),"wton swapToTONAndTransfer fail");
+        } else if (_outputUnwrapEth) {
             _WETH.withdraw(amountOut);
-            payable(sender).transfer(amountOut);
+            payable(sender).transfer(amountOut); 
         }
-
+    
         emit ExactInputEvent(
             sender,
             tokenIn,
@@ -346,11 +346,10 @@ contract SwapperV2 is
             amountIn = ISwapRouter(uniswapRouter).exactOutput(params);
         }
 
-        if (_outputUnwrapTON) require(IWTON(wton).swapToTONAndTransfer(sender, params.amountOut),"wton swapToTONAndTransfer fail");
-
         uint256 amountOut1 = params.amountOut;
-
-        if (_outputUnwrapEth) {
+        if (_outputUnwrapTON) {
+            require(IWTON(wton).swapToTONAndTransfer(sender, amountOut1),"wton swapToTONAndTransfer fail");
+        } else if (_outputUnwrapEth) {
             _WETH.withdraw(amountOut1);
             payable(sender).transfer(amountOut1);
         }
