@@ -1268,7 +1268,7 @@ describe("Swapper V2", function () {
     );
 
     const prevBalance = await provider.getBalance(admin1.address);
-    console.log("prevBalance ETH : ", Number(prevBalance));
+    // console.log("prevBalance ETH : ", Number(prevBalance));
 
     const tx = await swapperV2
       .connect(admin1)
@@ -1277,7 +1277,7 @@ describe("Swapper V2", function () {
     await tx.wait();
 
     const afterBalance = await await provider.getBalance(admin1.address);
-    console.log("afterBalance ETH : ", Number(afterBalance));
+    // console.log("afterBalance ETH : ", Number(afterBalance));
     expect(amountOut).to.be.gte(afterBalance.sub(prevBalance));
   })
 
@@ -1760,7 +1760,7 @@ describe("Swapper V2", function () {
       [admin2.address,tonToWTON]
     );
     
-    console.log("admin2.address : ",admin2.address);
+    // console.log("admin2.address : ",admin2.address);
 
     const prevBalance = await wtonContract.balanceOf(admin2.address);
     // console.log("prevBalance :",Number(prevBalance));
@@ -1786,8 +1786,6 @@ describe("Swapper V2", function () {
       [admin2.address,tonToWTON]
     );
     
-    console.log("admin2.address : ",admin2.address);
-
     const prevBalance = await tonContract.balanceOf(admin2.address);
     // console.log("prevBalance :",Number(prevBalance));
     const tx = await wtonContract
@@ -2021,6 +2019,101 @@ describe("Swapper V2", function () {
 
     const afterBalance = await await provider.getBalance(admin1.address);
     expect(amountOut).to.be.gte(afterBalance.sub(prevBalance));
+  })
+
+  it("exactInput: TON to WTON", async () => {
+    //want to input the 1TON
+    const amountIn = ethers.utils.parseEther("1");
+    const diff = ethers.BigNumber.from("1000000000");
+
+    //want to output WTON amount
+    const amountOut = amountIn.mul(diff);
+
+    const prevBalance = await wtonContract.balanceOf(admin1.address);
+    // console.log("prevBalance :",Number(prevBalance));
+    await tonContract.connect(admin1).approve(swapperV2.address,amountIn);
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .tonToWton(amountIn);
+    await tx.wait();
+
+    const afterBalance = await wtonContract.balanceOf(admin1.address);
+    // console.log("afterBalance :",Number(afterBalance));
+    expect(afterBalance).to.be.gte(prevBalance);
+    expect(afterBalance).to.be.equal(prevBalance.add(amountOut));
+  })
+
+  it("exactInput: WTON to TON", async () => {
+    //want to input the 1WTON
+    const amountIn = ethers.utils.parseEther("1000000000");
+
+    const diff = ethers.BigNumber.from("1000000000");
+
+    //want to output TON amount
+    const amountOut = amountIn.div(diff);
+
+    const prevBalance = await tonContract.balanceOf(admin1.address);
+    console.log("prevBalance :",Number(prevBalance));
+    await wtonContract.connect(admin1).approve(swapperV2.address,amountIn);
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .wtonToTon(amountIn);
+    await tx.wait();
+
+    const afterBalance = await tonContract.balanceOf(admin1.address);
+    console.log("afterBalance :",Number(afterBalance));
+    expect(afterBalance).to.be.gte(prevBalance);
+    expect(afterBalance).to.be.equal(prevBalance.add(amountOut));
+  })
+
+  it("exactOutput: TON to WTON", async () => {
+    //want to get 1 WTON
+    const amountOut = ethers.utils.parseEther("1000000000");
+
+    const diff = ethers.BigNumber.from("1000000000");
+
+    //get exactInput TON Amount
+    const amountIn = amountOut.div(diff);
+
+    const prevBalance = await wtonContract.balanceOf(admin1.address);
+    // console.log("prevBalance :",Number(prevBalance));
+    await tonContract.connect(admin1).approve(swapperV2.address,amountIn);
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .tonToWton(amountIn);
+    await tx.wait();
+
+    const afterBalance = await wtonContract.balanceOf(admin1.address);
+    // console.log("afterBalance :",Number(afterBalance));
+    expect(afterBalance).to.be.gte(prevBalance);
+    expect(afterBalance).to.be.equal(prevBalance.add(amountOut));
+  })
+
+  it("exactOutput: WTON to TON", async () => {
+    //want to get 1TON
+    const amountOut = ethers.utils.parseEther("1");
+
+    const diff = ethers.BigNumber.from("1000000000");
+
+    //get exactInput WTON Amount
+    const amountIn = amountOut.mul(diff);
+
+    const prevBalance = await tonContract.balanceOf(admin1.address);
+    
+    await wtonContract.connect(admin1).approve(swapperV2.address,amountIn);
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .wtonToTon(amountIn);
+    await tx.wait();
+
+    const afterBalance = await tonContract.balanceOf(admin1.address);
+    
+    expect(afterBalance).to.be.gte(prevBalance);
+    expect(afterBalance).to.be.equal(prevBalance.add(amountOut));
   })
 
 });

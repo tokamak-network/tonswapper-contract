@@ -140,8 +140,6 @@ contract SwapperV2 is
         );
     }
 
-    receive() external payable {}
-
     /* internal function */
 
     function _tonToWTON(address _sender, uint256 _amount) internal {
