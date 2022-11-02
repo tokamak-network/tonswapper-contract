@@ -278,9 +278,8 @@ contract SwapperV2 is
         if (_outputUnwrapTON) IWTON(wton).swapToTONAndTransfer(sender, amountOut);
 
         if (_outputUnwrapEth) {
-            address payable getAddr = payable(sender);
             _WETH.withdraw(amountOut);
-            getAddr.transfer(amountOut);
+            payable(sender).transfer(amountOut);
         }
 
         emit ExactInputEvent(
@@ -355,9 +354,8 @@ contract SwapperV2 is
         uint256 amountOut1 = params.amountOut;
 
         if (_outputUnwrapEth) {
-            address payable getAddr = payable(sender);
             _WETH.withdraw(amountOut1);
-            getAddr.transfer(amountOut1);
+            payable(sender).transfer(amountOut1);
         }
 
         address sender1 = sender;
@@ -365,10 +363,8 @@ contract SwapperV2 is
         if (amountIn < params.amountInMaximum) {
             refund = params.amountInMaximum - amountIn;
             if(_wrapEth) {
-                require(tokenIn == address(_WETH), "tokenIn is not ETH");
-                address payable getAddr = payable(sender1);
                 _WETH.withdraw(refund);
-                getAddr.transfer(refund);
+                payable(sender1).transfer(refund);
             } else {
                 IERC20(tokenIn).transfer(sender1, refund);
             }
