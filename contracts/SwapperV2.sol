@@ -210,6 +210,7 @@ contract SwapperV2 is
             require(msg.value == 0, "msg.value should be 0");
 
             if (_inputWrapWTON) {
+                require(amountIn == (amountIn/1e9*1e9), "amountIn need wton uint");
                 uint256 tonAmount = amountIn / 1e9;
                 _needapprove(tonAmount);
 
