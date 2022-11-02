@@ -228,6 +228,7 @@ contract SwapperV2 is
         bool _outputUnwrapTON
     )
         internal
+        ifFree
         returns (uint256 amountOut)
     {
         require(params.recipient == sender, "recipient is not sender");
@@ -293,8 +294,8 @@ contract SwapperV2 is
         bool _inputWrapWTON,
         bool _outputUnwrapTON
     )
-        public
-        payable
+        internal
+        ifFree
         returns (uint256 amountIn)
     {
         require(params.recipient == sender, "recipient is not sender");

@@ -11,7 +11,17 @@ contract SwapperStorage  {
     address public ton;             //decimal = 18 (WAD)
     address public tos;             //decimal = 18 (WAD)
 
+    uint256 internal free = 1;
+
     IWETH public _WETH;
     
     ISwapRouter public uniswapRouter;
+
+    /// @dev Check if a function is used or not
+    modifier ifFree {
+        require(free == 1, "LockId is already in use");
+        free = 0;
+        _;
+        free = 1;
+    }
 }
