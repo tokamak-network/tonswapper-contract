@@ -1775,915 +1775,1037 @@ describe("Swapper V2", function () {
       .approveAndCall(swapperV2.address, params.amountInMaximum, data);
   })
 
-  describe("#uniswap gasFee", async () => {
-    describe("#exactInput", async () => {
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.weth, uniswapInfo.wton],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = {
-          tokenIn: uniswapInfo.weth,
-          tokenOut: uniswapInfo.wton,
-          fee: 3000,
-          recipient: admin1.address,
-          deadline: 100000000000000,
-          amountIn: amountIn,
-          amountOutMinimum: amountOut,
-          sqrtPriceLimitX96: 0,
-        };
-      })
-      
-      it("#exactInput ETH -> TON", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-  
-        await uniswapRouter.connect(admin1).exactInputSingle(params);
-  
-        await wtonContract.connect(admin1).swapToTON(amountIn);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("0.1");
-    
-        path = encodePath(
-          [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput ETH -> TOS", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.weth, uniswapInfo.wton],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = {
-          tokenIn: uniswapInfo.weth,
-          tokenOut: uniswapInfo.wton,
-          fee: 3000,
-          recipient: admin1.address,
-          deadline: 100000000000000,
-          amountIn: amountIn,
-          amountOutMinimum: amountOut,
-          sqrtPriceLimitX96: 0,
-        };
-      })
-
-
-      it("#exactInput ETH -> WTON", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-  
-        await uniswapRouter.connect(admin1).exactInputSingle(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("0.1");
-    
-        path = encodePath(
-          [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput ETH -> AURA", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-    
-        path = encodePath(
-          [uniswapInfo.wton, uniswapInfo.tos],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
-    
-        params = {
-          tokenIn: uniswapInfo.wton,
-          tokenOut: uniswapInfo.tos,
-          fee: 3000,
-          recipient: admin1.address,
-          deadline: 100000000000000,
-          amountIn: wtonAmountIn,
-          amountOutMinimum: amountOut,
-          sqrtPriceLimitX96: 0,
-        };
-      })
-
-      it("#exactInput TON -> TOS", async () => {
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-        await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
-        await wtonContract.connect(admin1).swapFromTON(amountIn);
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
-        await uniswapRouter.connect(admin1).exactInputSingle(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-    
-        path = encodePath(
-          [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          wtonAmountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput TON -> AURA", async () => {
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-        await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
-        await wtonContract.connect(admin1).swapFromTON(amountIn);
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-    
-        path = encodePath(
-          [uniswapInfo.wton, uniswapInfo.tos],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
-    
-        params = {
-          tokenIn: uniswapInfo.wton,
-          tokenOut: uniswapInfo.tos,
-          fee: 3000,
-          recipient: admin1.address,
-          deadline: 100000000000000,
-          amountIn: wtonAmountIn,
-          amountOutMinimum: amountOut,
-          sqrtPriceLimitX96: 0,
-        };
-      })
-
-      it("#exactInput WTON -> TOS", async () => {
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
-        await uniswapRouter.connect(admin1).exactInputSingle(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-    
-        path = encodePath(
-          [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          wtonAmountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput WTON -> AURA", async () => {
-        let wtonAmountIn = ethers.utils.parseEther("1000000000");
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.lyda],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM] 
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput AURA -> LYDA", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput AURA -> TON", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-        await wtonContract.connect(admin1).swapToTON(amountIn);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput AURA -> WTON", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.aura, uniswapInfo.tos],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput AURA -> TOS", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.wton, uniswapInfo.weth],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-
-      it("#exactInput TON -> ETH", async () => {
-        await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
-        await wtonContract.connect(admin1).swapFromTON(amountIn);
-        amountIn = amountIn.mul(diff);
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-        await wethContract.connect(admin1).withdraw(amountOut);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1");
-    
-        path = encodePath(
-          [uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-
-      it("#exactInput TOS -> ETH", async () => {
-        await tosContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-        await wethContract.connect(admin1).withdraw(amountOut);
-      })
-
-      it("get amountOut", async () => {
-        amountIn = ethers.utils.parseEther("1000000000");
-    
-        path = encodePath(
-          [uniswapInfo.wton, uniswapInfo.weth],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountOut = await quoteExactInput(quoter, path, amountIn);
-    
-        params = getExactInputParams(
-          admin1.address,
-          path,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactInput WTON -> ETH", async () => {
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactInput(params);
-        await wethContract.connect(admin1).withdraw(amountOut);
-      })
-
-
-
-    })
-
-    describe("#exactOutput", async () => {
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput TOS -> ETH", async () => {
-        await tosContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-        await wethContract.connect(admin1).withdraw(amountOut);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("0.01");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.weth, uniswapInfo.wton],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        amountIn = amountIn.div(diff).mul(diff);
-        let denominator = BigNumber.from("100")
-        let numerator = BigNumber.from("110")
-        amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-
-      it("#exactOutput TON -> ETH", async () => {
-        amountIn = amountIn.div(diff);
-        await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
-        await wtonContract.connect(admin1).swapFromTON(amountIn);
-        amountIn = amountIn.mul(diff);
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-        await wethContract.connect(admin1).withdraw(amountOut);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.tos, uniswapInfo.aura],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput AURA -> TOS", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-
-      it("#exactOutput AURA -> WTON", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput AURA -> TON", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-        await wtonContract.connect(admin1).swapToTON(amountIn);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.lyda, uniswapInfo.tos, uniswapInfo.aura],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput AURA -> LYDA", async () => {
-        await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput WTON -> AURA", async () => {
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.tos, uniswapInfo.wton],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput WTON -> TOS", async () => {
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        amountIn = amountIn.div(diff).mul(diff);
-        let denominator = BigNumber.from("100")
-        let numerator = BigNumber.from("110")
-        amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput TON -> AURA", async () => {
-        amountIn = amountIn.div(diff);
-        await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
-        await wtonContract.connect(admin1).swapFromTON(amountIn);
-        amountIn = amountIn.mul(diff);
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.tos, uniswapInfo.wton],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        amountIn = amountIn.div(diff).mul(diff);
-        let denominator = BigNumber.from("100")
-        let numerator = BigNumber.from("110")
-        amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput TON -> TOS", async () => {
-        amountIn = amountIn.div(diff);
-        await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
-        await wtonContract.connect(admin1).swapFromTON(amountIn);
-        amountIn = amountIn.mul(diff);
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("100");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        // amountIn = amountIn.div(diff).mul(diff);
-        // let denominator = BigNumber.from("100")
-        // let numerator = BigNumber.from("110")
-        // amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput ETH -> AURA", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("100");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
-          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        // amountIn = amountIn.div(diff).mul(diff);
-        // let denominator = BigNumber.from("100")
-        // let numerator = BigNumber.from("110")
-        // amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput ETH -> TOS", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("100");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.wton, uniswapInfo.weth],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        // amountIn = amountIn.div(diff).mul(diff);
-        // let denominator = BigNumber.from("100")
-        // let numerator = BigNumber.from("110")
-        // amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput ETH -> WTON", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("100");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.wton, uniswapInfo.weth],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        // amountIn = amountIn.div(diff).mul(diff);
-        // let denominator = BigNumber.from("100")
-        // let numerator = BigNumber.from("110")
-        // amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput ETH -> TON", async () => {
-        await wethContract.connect(admin1).deposit(
-          {value: amountIn}
-        )
-        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-        await wtonContract.connect(admin1).swapToTON(amountIn);
-      })
-
-      it("get amountIn", async () => {
-        amountOut = ethers.utils.parseEther("0.1");
-    
-        // ** !! reverse path !!
-        reversePath = encodePath(
-          [uniswapInfo.weth, uniswapInfo.wton],
-          [FeeAmount.MEDIUM]
-        );
-    
-        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
-        // amountIn = amountIn.div(diff).mul(diff);
-        // let denominator = BigNumber.from("100")
-        // let numerator = BigNumber.from("110")
-        // amountIn = amountIn.mul(numerator).div(denominator);
-    
-        params = getExactOutputParams(
-          admin1.address,
-          reversePath,
-          amountIn,
-          amountOut
-        );
-
-        let block = await ethers.provider.getBlock();
-        params.deadline = block.timestamp + 10;
-      })
-
-      it("#exactOutput WTON -> ETH", async () => {
-        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
-        await uniswapRouter.connect(admin1).exactOutput(params);
-        await wethContract.connect(admin1).withdraw(amountOut);
-      })
-    })
+  it("get amountOut", async () => {
+    amountIn = ethers.utils.parseEther("10");
+
+    path = encodePath(
+      [uniswapInfo.tos, uniswapInfo.wton],
+      [FeeAmount.MEDIUM]
+    );
+
+    amountOut = await quoteExactInput(quoter, path, amountIn);
+
+    params = getExactInputParams(
+      admin1.address,
+      path,
+      amountIn,
+      amountOut
+    );
   })
+
+  it("exactInput : TOS to TON", async () => {
+    const wrapEth = false;
+    const outputUnwrapEth = false;
+    const inputWrapWTON = false;
+    const outputUnwrapTON = true;
+
+    await tosContract.connect(admin1).approve(swapperV2.address, amountIn);
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
+  })
+
+  it("get amountIn", async () => {
+    amountOut = ethers.utils.parseEther("0.1");
+
+    // ** !! reverse path !!
+    reversePath = encodePath(
+      [uniswapInfo.wton, uniswapInfo.tos],
+      [FeeAmount.MEDIUM]
+    );
+
+    amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+
+    params = getExactOutputParams(
+      admin1.address,
+      reversePath,
+      amountIn,
+      amountOut
+    );
+  })
+
+  it("exactOutput : TOS to TON", async () => {
+    const wrapEth = false;
+    const outputUnwrapEth = false;
+    const inputWrapWTON = false;
+    const outputUnwrapTON = true;
+
+    await tosContract.connect(admin1).approve(swapperV2.address, amountIn);
+
+    const tx = await swapperV2
+      .connect(admin1)
+      .exactOutput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON);
+  })
+  
+
+  // describe("#uniswap gasFee", async () => {
+  //   describe("#exactInput", async () => {
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.weth, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = {
+  //         tokenIn: uniswapInfo.weth,
+  //         tokenOut: uniswapInfo.wton,
+  //         fee: 3000,
+  //         recipient: admin1.address,
+  //         deadline: 100000000000000,
+  //         amountIn: amountIn,
+  //         amountOutMinimum: amountOut,
+  //         sqrtPriceLimitX96: 0,
+  //       };
+  //     })
+      
+  //     it("#exactInput ETH -> TON", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+        
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  
+  //       await uniswapRouter.connect(admin1).exactInputSingle(params);
+  
+  //       await wtonContract.connect(admin1).swapToTON(amountIn);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("0.1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput ETH -> TOS", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.weth, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = {
+  //         tokenIn: uniswapInfo.weth,
+  //         tokenOut: uniswapInfo.wton,
+  //         fee: 3000,
+  //         recipient: admin1.address,
+  //         deadline: 100000000000000,
+  //         amountIn: amountIn,
+  //         amountOutMinimum: amountOut,
+  //         sqrtPriceLimitX96: 0,
+  //       };
+  //     })
+
+
+  //     it("#exactInput ETH -> WTON", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+        
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  
+  //       await uniswapRouter.connect(admin1).exactInputSingle(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("0.1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput ETH -> AURA", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.tos],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
+    
+  //       params = {
+  //         tokenIn: uniswapInfo.wton,
+  //         tokenOut: uniswapInfo.tos,
+  //         fee: 3000,
+  //         recipient: admin1.address,
+  //         deadline: 100000000000000,
+  //         amountIn: wtonAmountIn,
+  //         amountOutMinimum: amountOut,
+  //         sqrtPriceLimitX96: 0,
+  //       };
+  //     })
+
+  //     it("#exactInput TON -> TOS", async () => {
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+  //       await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
+  //       await wtonContract.connect(admin1).swapFromTON(amountIn);
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
+  //       await uniswapRouter.connect(admin1).exactInputSingle(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         wtonAmountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput TON -> AURA", async () => {
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+  //       await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
+  //       await wtonContract.connect(admin1).swapFromTON(amountIn);
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.tos],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
+    
+  //       params = {
+  //         tokenIn: uniswapInfo.wton,
+  //         tokenOut: uniswapInfo.tos,
+  //         fee: 3000,
+  //         recipient: admin1.address,
+  //         deadline: 100000000000000,
+  //         amountIn: wtonAmountIn,
+  //         amountOutMinimum: amountOut,
+  //         sqrtPriceLimitX96: 0,
+  //       };
+  //     })
+
+  //     it("#exactInput WTON -> TOS", async () => {
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
+  //       await uniswapRouter.connect(admin1).exactInputSingle(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, wtonAmountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         wtonAmountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput WTON -> AURA", async () => {
+  //       let wtonAmountIn = ethers.utils.parseEther("1000000000");
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,wtonAmountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.lyda],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM] 
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput AURA -> LYDA", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput AURA -> TON", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //       await wtonContract.connect(admin1).swapToTON(amountIn);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput AURA -> WTON", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.aura, uniswapInfo.tos],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput AURA -> TOS", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.weth],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+
+  //     it("#exactInput TON -> ETH", async () => {
+  //       await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
+  //       await wtonContract.connect(admin1).swapFromTON(amountIn);
+  //       amountIn = amountIn.mul(diff);
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //       await wethContract.connect(admin1).withdraw(amountOut);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+
+  //     it("#exactInput TOS -> ETH", async () => {
+  //       await tosContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //       await wethContract.connect(admin1).withdraw(amountOut);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1000000000");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.weth],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput WTON -> ETH", async () => {
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //       await wethContract.connect(admin1).withdraw(amountOut);
+  //     })
+
+  //     it("get amountOut", async () => {
+  //       amountIn = ethers.utils.parseEther("1");
+    
+  //       path = encodePath(
+  //         [uniswapInfo.tos, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+  //       params = getExactInputParams(
+  //         admin1.address,
+  //         path,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactInput TOS -> TON", async () => {
+  //       await tosContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactInput(params);
+  //       await wtonContract.connect(admin1).swapToTON(amountIn);
+  //     })
+
+  //   })
+
+  //   describe("#exactOutput", async () => {
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.weth, uniswapInfo.wton, uniswapInfo.tos],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput TOS -> ETH", async () => {
+  //       await tosContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //       await wethContract.connect(admin1).withdraw(amountOut);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("0.01");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.weth, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       amountIn = amountIn.div(diff).mul(diff);
+  //       let denominator = BigNumber.from("100")
+  //       let numerator = BigNumber.from("110")
+  //       amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+
+  //     it("#exactOutput TON -> ETH", async () => {
+  //       amountIn = amountIn.div(diff);
+  //       await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
+  //       await wtonContract.connect(admin1).swapFromTON(amountIn);
+  //       amountIn = amountIn.mul(diff);
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //       await wethContract.connect(admin1).withdraw(amountOut);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.tos, uniswapInfo.aura],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput AURA -> TOS", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+
+  //     it("#exactOutput AURA -> WTON", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.tos, uniswapInfo.aura],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput AURA -> TON", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //       await wtonContract.connect(admin1).swapToTON(amountIn);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.lyda, uniswapInfo.tos, uniswapInfo.aura],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput AURA -> LYDA", async () => {
+  //       await auraContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput WTON -> AURA", async () => {
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.tos, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput WTON -> TOS", async () => {
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       amountIn = amountIn.div(diff).mul(diff);
+  //       let denominator = BigNumber.from("100")
+  //       let numerator = BigNumber.from("110")
+  //       amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput TON -> AURA", async () => {
+  //       amountIn = amountIn.div(diff);
+  //       await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
+  //       await wtonContract.connect(admin1).swapFromTON(amountIn);
+  //       amountIn = amountIn.mul(diff);
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.tos, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       amountIn = amountIn.div(diff).mul(diff);
+  //       let denominator = BigNumber.from("100")
+  //       let numerator = BigNumber.from("110")
+  //       amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput TON -> TOS", async () => {
+  //       amountIn = amountIn.div(diff);
+  //       await tonContract.connect(admin1).approve(wtonContract.address,amountIn);
+  //       await wtonContract.connect(admin1).swapFromTON(amountIn);
+  //       amountIn = amountIn.mul(diff);
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("100");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       // amountIn = amountIn.div(diff).mul(diff);
+  //       // let denominator = BigNumber.from("100")
+  //       // let numerator = BigNumber.from("110")
+  //       // amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput ETH -> AURA", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("100");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
+  //         [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       // amountIn = amountIn.div(diff).mul(diff);
+  //       // let denominator = BigNumber.from("100")
+  //       // let numerator = BigNumber.from("110")
+  //       // amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput ETH -> TOS", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("100");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.weth],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       // amountIn = amountIn.div(diff).mul(diff);
+  //       // let denominator = BigNumber.from("100")
+  //       // let numerator = BigNumber.from("110")
+  //       // amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput ETH -> WTON", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("100");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.weth],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       // amountIn = amountIn.div(diff).mul(diff);
+  //       // let denominator = BigNumber.from("100")
+  //       // let numerator = BigNumber.from("110")
+  //       // amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput ETH -> TON", async () => {
+  //       await wethContract.connect(admin1).deposit(
+  //         {value: amountIn}
+  //       )
+  //       await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //       await wtonContract.connect(admin1).swapToTON(amountIn);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("0.1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.weth, uniswapInfo.wton],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       // amountIn = amountIn.div(diff).mul(diff);
+  //       // let denominator = BigNumber.from("100")
+  //       // let numerator = BigNumber.from("110")
+  //       // amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+  //     it("#exactOutput WTON -> ETH", async () => {
+  //       await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //       await wethContract.connect(admin1).withdraw(amountOut);
+  //     })
+
+  //     it("get amountIn", async () => {
+  //       amountOut = ethers.utils.parseEther("1");
+    
+  //       // ** !! reverse path !!
+  //       reversePath = encodePath(
+  //         [uniswapInfo.wton, uniswapInfo.tos],
+  //         [FeeAmount.MEDIUM]
+  //       );
+    
+  //       amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+  //       // amountIn = amountIn.div(diff).mul(diff);
+  //       // let denominator = BigNumber.from("100")
+  //       // let numerator = BigNumber.from("110")
+  //       // amountIn = amountIn.mul(numerator).div(denominator);
+    
+  //       params = getExactOutputParams(
+  //         admin1.address,
+  //         reversePath,
+  //         amountIn,
+  //         amountOut
+  //       );
+
+  //       let block = await ethers.provider.getBlock();
+  //       params.deadline = block.timestamp + 10;
+  //     })
+
+
+  //     it("#exactOutput TOS -> TON", async () => {
+  //       await tosContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+  //       await uniswapRouter.connect(admin1).exactOutput(params);
+  //       await wtonContract.connect(admin1).swapToTON(amountIn);
+  //     })
+  //   })
+  // })
 
 });

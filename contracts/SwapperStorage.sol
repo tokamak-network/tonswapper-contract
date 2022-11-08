@@ -11,9 +11,11 @@ contract SwapperStorage  {
     address public ton;             //decimal = 18 (WAD)
     address public tos;             //decimal = 18 (WAD)
 
-    uint256 internal free = 1;
-
     IWETH public _WETH;
     
     ISwapRouter public uniswapRouter;
+
+    bool check;
+
+    mapping (address => bool) public tokenCheck;
 }
