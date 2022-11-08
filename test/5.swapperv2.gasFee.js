@@ -2515,20 +2515,173 @@ describe("Swapper V2", function () {
         await uniswapRouter.connect(admin1).exactOutput(params);
       })
 
+      it("get amountIn", async () => {
+        amountOut = ethers.utils.parseEther("100");
+    
+        // ** !! reverse path !!
+        reversePath = encodePath(
+          [uniswapInfo.aura, uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
+          [FeeAmount.MEDIUM, FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+        );
+    
+        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+        // amountIn = amountIn.div(diff).mul(diff);
+        // let denominator = BigNumber.from("100")
+        // let numerator = BigNumber.from("110")
+        // amountIn = amountIn.mul(numerator).div(denominator);
+    
+        params = getExactOutputParams(
+          admin1.address,
+          reversePath,
+          amountIn,
+          amountOut
+        );
+
+        let block = await ethers.provider.getBlock();
+        params.deadline = block.timestamp + 10;
+      })
+
       it("#exactOutput ETH -> AURA", async () => {
-        
+        await wethContract.connect(admin1).deposit(
+          {value: amountIn}
+        )
+        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+        await uniswapRouter.connect(admin1).exactOutput(params);
+      })
+
+      it("get amountIn", async () => {
+        amountOut = ethers.utils.parseEther("100");
+    
+        // ** !! reverse path !!
+        reversePath = encodePath(
+          [uniswapInfo.tos, uniswapInfo.wton, uniswapInfo.weth],
+          [FeeAmount.MEDIUM, FeeAmount.MEDIUM]
+        );
+    
+        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+        // amountIn = amountIn.div(diff).mul(diff);
+        // let denominator = BigNumber.from("100")
+        // let numerator = BigNumber.from("110")
+        // amountIn = amountIn.mul(numerator).div(denominator);
+    
+        params = getExactOutputParams(
+          admin1.address,
+          reversePath,
+          amountIn,
+          amountOut
+        );
+
+        let block = await ethers.provider.getBlock();
+        params.deadline = block.timestamp + 10;
       })
 
       it("#exactOutput ETH -> TOS", async () => {
-        
+        await wethContract.connect(admin1).deposit(
+          {value: amountIn}
+        )
+        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+        await uniswapRouter.connect(admin1).exactOutput(params);
+      })
+
+      it("get amountIn", async () => {
+        amountOut = ethers.utils.parseEther("100");
+    
+        // ** !! reverse path !!
+        reversePath = encodePath(
+          [uniswapInfo.wton, uniswapInfo.weth],
+          [FeeAmount.MEDIUM]
+        );
+    
+        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+        // amountIn = amountIn.div(diff).mul(diff);
+        // let denominator = BigNumber.from("100")
+        // let numerator = BigNumber.from("110")
+        // amountIn = amountIn.mul(numerator).div(denominator);
+    
+        params = getExactOutputParams(
+          admin1.address,
+          reversePath,
+          amountIn,
+          amountOut
+        );
+
+        let block = await ethers.provider.getBlock();
+        params.deadline = block.timestamp + 10;
       })
 
       it("#exactOutput ETH -> WTON", async () => {
-        
+        await wethContract.connect(admin1).deposit(
+          {value: amountIn}
+        )
+        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+        await uniswapRouter.connect(admin1).exactOutput(params);
+      })
+
+      it("get amountIn", async () => {
+        amountOut = ethers.utils.parseEther("100");
+    
+        // ** !! reverse path !!
+        reversePath = encodePath(
+          [uniswapInfo.wton, uniswapInfo.weth],
+          [FeeAmount.MEDIUM]
+        );
+    
+        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+        // amountIn = amountIn.div(diff).mul(diff);
+        // let denominator = BigNumber.from("100")
+        // let numerator = BigNumber.from("110")
+        // amountIn = amountIn.mul(numerator).div(denominator);
+    
+        params = getExactOutputParams(
+          admin1.address,
+          reversePath,
+          amountIn,
+          amountOut
+        );
+
+        let block = await ethers.provider.getBlock();
+        params.deadline = block.timestamp + 10;
       })
 
       it("#exactOutput ETH -> TON", async () => {
-        
+        await wethContract.connect(admin1).deposit(
+          {value: amountIn}
+        )
+        await wethContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+        await uniswapRouter.connect(admin1).exactOutput(params);
+        await wtonContract.connect(admin1).swapToTON(amountIn);
+      })
+
+      it("get amountIn", async () => {
+        amountOut = ethers.utils.parseEther("0.1");
+    
+        // ** !! reverse path !!
+        reversePath = encodePath(
+          [uniswapInfo.weth, uniswapInfo.wton],
+          [FeeAmount.MEDIUM]
+        );
+    
+        amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
+        // amountIn = amountIn.div(diff).mul(diff);
+        // let denominator = BigNumber.from("100")
+        // let numerator = BigNumber.from("110")
+        // amountIn = amountIn.mul(numerator).div(denominator);
+    
+        params = getExactOutputParams(
+          admin1.address,
+          reversePath,
+          amountIn,
+          amountOut
+        );
+
+        let block = await ethers.provider.getBlock();
+        params.deadline = block.timestamp + 10;
+      })
+
+      it("#exactOutput WTON -> ETH", async () => {
+        await wtonContract.connect(admin1).approve(uniswapRouter.address,amountIn);
+        await uniswapRouter.connect(admin1).exactOutput(params);
+        await wethContract.connect(admin1).withdraw(amountOut);
       })
     })
   })
