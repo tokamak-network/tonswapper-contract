@@ -246,7 +246,9 @@ contract SwapperV2 is
         address recipient = params.recipient;
         if (_outputUnwrapTON || _outputUnwrapEth) recipient = address(this);
 
-        require(IERC20(tokenIn).approve(address(uniswapRouter), params.amountIn), "approve fail");
+        if (IERC20(tokenIn).allowance(address(this), address(uniswapRouter)) < params.amountIn ){
+            require(IERC20(tokenIn).approve(address(uniswapRouter), params.amountIn), "approve fail");
+        }
 
         if (numPools == 1) {
             ISwapRouter.ExactInputSingleParams memory param =
