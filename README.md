@@ -2,6 +2,7 @@
 # Mainnet Address
 
 SwapperLogic : 0x57bd88f20003185cb136f859e7724dd75910fd75
+
 SwapperProxy : 0x580d3159adE0e95558d10A0Dc9d55A9Ee84F3E27
 
 # Advanced Sample Hardhat Project
