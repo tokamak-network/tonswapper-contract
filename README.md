@@ -5,45 +5,27 @@ SwapperLogic : 0x57bd88f20003185cb136f859e7724dd75910fd75
 
 SwapperProxy : 0x580d3159adE0e95558d10A0Dc9d55A9Ee84F3E27
 
-# Advanced Sample Hardhat Project
+# Goerli Address
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
+SwapperLogic : 0x5f569d4C9cce980D2fcc953d1FE684Ace28e96C7
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
+SwapperProxy : 0xb99300e6650f2b40a5359D00396a6Ae17Bf1bc97
+
+
+# How to test
+
+Try running some of the following tasks:
+
+make the fork mainnet node
+
+```shell
+npx hardhat test test/5.swapperv2.gasFee.js --network local 
+```
+
+# How to deploy
 
 Try running some of the following tasks:
 
 ```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.js
-node scripts/deploy.js
-npx eslint '**/*.js'
-npx eslint '**/*.js' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
-```
-
-# Etherscan verification
-
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
-
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
-
-```shell
-hardhat run --network ropsten scripts/deploy.js
-```
-
-Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
-
-```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
+npx hardhat run scripts/mainnet_deploy.js --network mainnet
 ```
