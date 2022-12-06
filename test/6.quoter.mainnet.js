@@ -256,8 +256,8 @@ describe("Swapper V2", function () {
 
     const amountIn = await quoteExactOutput(quoter, reversePath, amountOut);
 
-    console.log("TON amountIn : ", amountIn);
-    console.log("TON amountIn : ", Number(amountIn));
+    console.log("WTON amountIn : ", amountIn);
+    console.log("WTON amountIn : ", Number(amountIn));
   });
 
 
