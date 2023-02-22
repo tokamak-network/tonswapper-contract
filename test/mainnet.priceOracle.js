@@ -19,7 +19,14 @@ const poolContract = new ethers.Contract(
 
 async function main(pool, seconds) {
     const secondsAgo = [seconds, 0]
-    
+
+    const observeData = await pool.observe(secondsAgo)
+    const tickCumulatives = observeData.tickCumulatives.map(v => Number(v))
+
+    const tickCumulativesDelta = tickCumulatives[1] = tickCumulatives[0]
+
+    const arithmeticMeanTick = (tickCumulativesDelta / secondsAgo[0]).toFixed(0)
+
 }
 
 main(poolContract, 100)

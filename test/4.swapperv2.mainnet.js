@@ -185,6 +185,44 @@ describe("Swapper V2", function () {
     swapperV2 = new ethers.Contract( swapperV2Proxy.address, SWAP2_ABI.abi, ethers.provider);
   })
 
+  it("revertedWith test exactInput: swap ETH to TOS", async () => {
+    const amountIn = ethers.utils.parseEther("1");
+
+    const path = encodePath(
+      [uniswapInfo.wton, uniswapInfo.tos],
+      [FeeAmount.MEDIUM]
+    );
+    
+    const amountOut = await quoteExactInput(quoter, path, amountIn);
+    
+    const wrapEth = true;
+    const outputUnwrapEth = false;
+    const inputWrapWTON = false;
+    const outputUnwrapTON = false;
+    
+    const params = getExactInputParams(
+      admin1.address,
+      path,
+      amountIn,
+      amountOut
+    );
+    
+    // const tx = await swapperV2
+    //   .connect(admin1)
+    //   .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
+    //     value: amountIn,
+    //   });
+    
+    // await tx.wait();
+
+    await expect(swapperV2
+      .connect(admin1)
+      .exactInput(params, wrapEth, outputUnwrapEth, inputWrapWTON, outputUnwrapTON, {
+        value: amountIn,
+      })
+    ).to.be.revertedWith("tokenIn is not WETH");
+  })
+
   it("exactOutput: swap ETH to TON ", async () => {
     const amountExactOut = ethers.utils.parseEther("1000");
     const amountWTONOut = ethers.BigNumber.from("1" + "0".repeat(30));
