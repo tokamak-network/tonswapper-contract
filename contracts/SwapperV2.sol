@@ -184,6 +184,20 @@ contract SwapperV2 is
         }
     }
 
+    function _checkAllowance(
+        uint256 _depositAmount
+    ) internal {
+        if(_depositAmount > IERC20(ton).allowance(address(this),l1Bridge)) {
+            require(
+                IERC20(ton).approve(
+                    l1Bridge,
+                    type(uint256).max
+                ),
+                "ton approve fail"
+            );
+        }
+    }
+
     function _exactInit(
         address sender,
         bytes memory path,
@@ -421,6 +435,22 @@ contract SwapperV2 is
         }
     }
 
+    function _depoistERC20To(
+        address to,
+        uint256 depositAmount,
+        uint32 l2gas,
+        bytes calldata data
+    ) internal {
+        IIL1Bridge(l1Bridge).depositERC20To(
+            ton,
+            l2TokenTON,
+            to,
+            depositAmount,
+            l2gas,
+            data
+        );
+    }
+
     /* pure function */
 
     /// @inheritdoc ISwapperV2
@@ -439,6 +469,11 @@ contract SwapperV2 is
         tokenA = data.toAddress(0);
         fee = data.toUint24(20);
         tokenB = data.toAddress(23);
+    }
+
+
+     function _toWAD(uint256 v) internal pure returns (uint256) {
+        return v / 10 ** 9;
     }
 
 }
