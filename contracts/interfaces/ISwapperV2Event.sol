@@ -42,4 +42,29 @@ interface ISwapperV2Event {
         uint256 amountOut,
         uint256 refund 
     );
+
+
+    event DepositedWTON (
+        address sender,
+        uint256 wtonAmount,
+        uint256 tonAmount
+    );
+
+    event DepositedTON (
+        address sender,
+        uint256 tonAmount
+    );
+
+    event DepositedWTONTo (
+        address sender,
+        address to,
+        uint256 wtonAmount,
+        uint256 tonAmount
+    );
+
+    event DepositedTONTo (
+        address sender,
+        address to,
+        uint256 tonAmount
+    );
 }

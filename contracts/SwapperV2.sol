@@ -140,6 +140,22 @@ contract SwapperV2 is
         );
     }
 
+    function depositWTON (
+        uint256 depositAmount,
+        uint32 l2gas,
+        bytes calldata data
+    ) external {
+        require(depositAmount > 0, "need input amount");
+        require(IERC20(wton).allowance(msg.sender, address(this)) >= depositAmount, "wton exceeds allowance");
+        _depositWTON(
+            msg.sender,
+            address(0),
+            depositAmount,
+            l2gas,
+            data
+        );
+    }
+
     /* internal function */
 
     function _tonToWTON(address _sender, uint256 _amount) internal {
@@ -371,6 +387,38 @@ contract SwapperV2 is
             amountOut1,
             refund
         );
+    }
+
+    function _depositWTON(
+        address sender,
+        address to,
+        uint256 depositAmount,
+        uint32 l2gas,
+        bytes calldata data
+    ) internal {
+        IERC20(wton).safeTransferFrom(sender,address(this),depositAmount);
+        IWTON(wton).swapToTON(depositAmount);
+        uint256 tonAmount = _toWAD(depositAmount);
+        _checkAllowance(tonAmount);
+        if(to == address(0)){
+            _depoistERC20To(
+                sender,
+                tonAmount,
+                l2gas,
+                data
+            );
+
+            emit DepositedWTON(sender, depositAmount, tonAmount);
+        } else {
+            _depoistERC20To(
+                to,
+                tonAmount,
+                l2gas,
+                data
+            );
+
+            emit DepositedWTONTo(sender, to, depositAmount, tonAmount);
+        }
     }
 
     /* pure function */
